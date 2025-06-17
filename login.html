@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Orjeun - koneksyon</title>
+  <title>Orjeun - Connexion</title>
   <script src="https://cdn.tailwindcss.com/3.4.16"></script>
   <script>
     tailwind.config = {
@@ -40,6 +40,9 @@
     .tab-indicator { transition: transform 0.3s ease; }
     .password-strength { height: 4px; transition: width 0.3s ease; }
     .auth-card { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
+    .logged-in-container {
+      animation: slideFade 0.5s ease-out;
+    }
   </style>
 </head>
 <body class="bg-white min-h-screen flex flex-col">
@@ -49,7 +52,29 @@
       <h1 class="font-['Pacifico'] text-3xl text-primary">Orjeun</h1>
       <p class="text-gray-500 mt-2">Bienvenue sur votre plateforme</p>
     </div>
-    <div class="auth-card bg-white rounded-lg shadow-md p-6">
+    
+    <!-- Container pour utilisateur déjà connecté -->
+    <div id="logged-in-container" class="hidden auth-card bg-white rounded-lg shadow-md p-6">
+      <div class="text-center">
+        <div class="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center mx-auto mb-4">
+          <i class="ri-user-3-fill text-primary text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-medium text-gray-800">Vous êtes déjà connecté</h3>
+        <p class="text-gray-600 mt-2">Souhaitez-vous vous déconnecter ou accéder à votre tableau de bord ?</p>
+        
+        <div class="mt-6 flex flex-col sm:flex-row gap-3">
+          <button id="go-to-dashboard" class="flex-1 bg-primary hover:bg-primary-700 text-white py-2.5 rounded-button transition">
+            Tableau de bord
+          </button>
+          <button id="logout-btn" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-2.5 rounded-button transition">
+            Déconnexion
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Container pour login/signup -->
+    <div id="auth-container" class="auth-card bg-white rounded-lg shadow-md p-6">
       <div class="relative mb-8">
         <div class="flex">
           <button id="login-tab" class="flex-1 py-3 text-center font-medium cursor-pointer relative z-10 text-primary" onclick="switchTab('login')">Connexion</button>
@@ -57,6 +82,7 @@
         </div>
         <div class="tab-indicator absolute bottom-0 left-0 h-0.5 w-1/2 bg-primary"></div>
       </div>
+      
       <!-- Login Form -->
       <div id="login-form" class="form-container">
         <form id="login-form-element" class="space-y-5">
@@ -74,11 +100,12 @@
             </label>
             <a href="#" class="text-sm text-primary">Mot de passe oublié ?</a>
           </div>
-          <button type="submit" class="w-full bg-primary text-white py-2.5 rounded-button">Se connecter</button>
+          <button type="submit" class="w-full bg-primary hover:bg-primary-700 text-white py-2.5 rounded-button transition">Se connecter</button>
         </form>
         <div id="login-error" class="mt-4 text-red-500 text-sm hidden animate-slideFade"></div>
         <div id="login-success" class="mt-4 text-green-500 text-sm hidden animate-slideFade"></div>
       </div>
+      
       <!-- Signup Form -->
       <div id="signup-form" class="form-container hidden">
         <form id="signup-form-element" class="space-y-5">
@@ -103,14 +130,15 @@
               </div>
             </div>
           </div>
-          <button type="submit" class="w-full bg-primary text-white py-2.5 rounded-button">S'inscrire</button>
+          <button type="submit" class="w-full bg-primary hover:bg-primary-700 text-white py-2.5 rounded-button transition">S'inscrire</button>
         </form>
         <div id="signup-error" class="mt-4 text-red-500 text-sm hidden animate-slideFade"></div>
         <div id="signup-success" class="mt-4 text-green-500 text-sm hidden animate-slideFade"></div>
       </div>
     </div>
+    
     <p class="text-center mt-6 text-sm text-gray-500">
-      En continuant, vous acceptez nos <a href="#" class="text-primary">Conditions d'utilisation</a> et notre <a href="#" class="text-primary">Politique de confidentialité</a>.
+      En continuant, vous acceptez nos <a href="#" class="text-primary hover:underline">Conditions d'utilisation</a> et notre <a href="#" class="text-primary hover:underline">Politique de confidentialité</a>.
     </p>
   </div>
 </div>
@@ -153,6 +181,22 @@
   const loginSuccess = document.getElementById('login-success');
   const signupError = document.getElementById('signup-error');
   const signupSuccess = document.getElementById('signup-success');
+  const authContainer = document.getElementById('auth-container');
+  const loggedInContainer = document.getElementById('logged-in-container');
+  const logoutBtn = document.getElementById('logout-btn');
+  const goToDashboardBtn = document.getElementById('go-to-dashboard');
+
+  // Fonction pour vérifier l'état de connexion
+  function checkLoginState() {
+    const userId = sessionStorage.getItem('userId');
+    if (userId) {
+      authContainer.classList.add('hidden');
+      loggedInContainer.classList.remove('hidden');
+    } else {
+      authContainer.classList.remove('hidden');
+      loggedInContainer.classList.add('hidden');
+    }
+  }
 
   function switchTab(tab) {
     if (tab === 'login') {
@@ -234,14 +278,12 @@
               loginSuccess.textContent = 'Connexion réussie!';
               loginSuccess.classList.remove('hidden');
               loginError.classList.add('hidden');
-              setTimeout(() => window.location.href = 'dashboard.html', 1000);
+              
+              // Redirection après un court délai
+              setTimeout(() => {
+                window.location.href = 'dashboard.html';
+              }, 1000);
             }
-           
-            // Enregistrer dans le local storage
-            localStorage.setItem('userName', name);
-            localStorage.setItem('userEmail', email);
-            localStorage.setItem('userPassword', password);
-         
           });
           if (!found) throw new Error('Mot de passe incorrect');
         } else {
@@ -249,6 +291,7 @@
         }
       })
       .catch(error => {
+        hideLoading();
         loginError.textContent = error.message;
         loginError.classList.remove('hidden');
         loginError.classList.add('animate-slideFade');
@@ -276,23 +319,18 @@
           hideLoading();
           throw new Error('Cet email est déjà utilisé');
         } else {
-          const newUser  = db.ref('membres').push();
-          return newUser .set({
+          const newUser = db.ref('membres').push();
+          return newUser.set({
             nom: name,
             email: email,
             password: password,
             dateInscription: firebase.database.ServerValue.TIMESTAMP
-          }).then(() => {
-            // Enregistrer dans le local storage
-            localStorage.setItem('userName', name);
-            localStorage.setItem('userEmail', email);
-            localStorage.setItem('userPassword', password);
           });
         }
       })
       .then(() => {
         hideLoading();
-        signupSuccess.textContent = 'Inscription réussie!';
+        signupSuccess.textContent = 'Inscription réussie! Veuillez vous connecter.';
         signupSuccess.classList.remove('hidden');
         signupSuccess.classList.add('animate-slideFade');
         signupError.classList.add('hidden');
@@ -313,11 +351,34 @@
       });
   });
 
+  // Gestion de la déconnexion
+  logoutBtn.addEventListener('click', function() {
+    sessionStorage.removeItem('userId');
+    // Réinitialiser le formulaire
+    document.getElementById('login-email').value = '';
+    document.getElementById('login-password').value = '';
+    
+    // Afficher un message de déconnexion
+    loginSuccess.textContent = 'Déconnexion réussie!';
+    loginSuccess.classList.remove('hidden');
+    loginError.classList.add('hidden');
+    
+    // Masquer le conteneur de connexion et afficher le formulaire
+    setTimeout(() => {
+      loggedInContainer.classList.add('hidden');
+      authContainer.classList.remove('hidden');
+      loginSuccess.classList.add('hidden');
+    }, 1500);
+  });
+
+  // Aller au dashboard
+  goToDashboardBtn.addEventListener('click', function() {
+    window.location.href = 'dashboard.html';
+  });
+
+  // Vérifier l'état de connexion au chargement
   document.addEventListener('DOMContentLoaded', function () {
-    const userId = sessionStorage.getItem('userId');
-    if (userId) {
-      window.location.href = 'dashboard.html';
-    }
+    checkLoginState();
   });
 </script>
 </body>
