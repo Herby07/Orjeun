@@ -245,12 +245,12 @@
         <div class="container mx-auto px-4 py-4 header-container flex items-center justify-between">
             <div class="flex items-center w-full">
                 <div class="flex items-center justify-between w-full">
+                    <button class="mobile-menu-btn mr-4 text-gray-600">
+                        <i class="ri-menu-line ri-xl"></i>
+                    </button>
                     <h1 class="text-2xl md:text-3xl font-['Pacifico'] text-primary">Orjeun</h1>
-                    
                 </div>
             </div>
-            
-        
             
             <div class="flex items-center">
                 <div class="user-profile">
@@ -470,7 +470,7 @@
     </div>
 
     <!-- Audio Player (hidden) -->
-    <audio id="radio-player" src="https://stream.zeno.fm/wn5p6cc48nhvv"></audio>
+    <audio id="radio-player"></audio>
 
     <script>
         // Configuration Firebase
@@ -491,6 +491,7 @@
         
         // Variables globales
         let currentListeningSession = null;
+        let isPlaying = false;
         
         // Fonction pour afficher un toast
         function showToast(message, isSuccess = true) {
@@ -514,7 +515,12 @@
             const playButton = document.getElementById('play-btn');
             const volumeSlider = document.getElementById('volume');
             const audioWave = document.querySelector('.audio-wave');
-            let isPlaying = false;
+            
+            // Gestionnaire d'erreur audio
+            audioPlayer.addEventListener('error', function() {
+                console.error("Erreur de lecture audio:", audioPlayer.error);
+                showToast("Impossible de lire le flux radio. Veuillez réessayer plus tard.", false);
+            });
             
             // Référence à la base de données
             const horairesRef = database.ref('horaire');
@@ -753,6 +759,12 @@
             
             // Gestion de la lecture audio
             function togglePlayPause() {
+                if (!audioPlayer.src) {
+                    // Première fois : on définit la source
+                    audioPlayer.src = "https://stream.zeno.fm/wn5p6cc48nhvv";
+                    audioPlayer.load();
+                }
+                
                 if (isPlaying) {
                     audioPlayer.pause();
                     playButton.innerHTML = '<i class="ri-play-fill ri-lg"></i>';
@@ -760,11 +772,18 @@
                         span.style.animationPlayState = 'paused';
                     });
                 } else {
-                    audioPlayer.play();
-                    playButton.innerHTML = '<i class="ri-pause-fill ri-lg"></i>';
-                    audioWave.querySelectorAll('span').forEach(span => {
-                        span.style.animationPlayState = 'running';
-                    });
+                    audioPlayer.play()
+                        .then(() => {
+                            playButton.innerHTML = '<i class="ri-pause-fill ri-lg"></i>';
+                            audioWave.querySelectorAll('span').forEach(span => {
+                                span.style.animationPlayState = 'running';
+                            });
+                            isPlaying = true;
+                        })
+                        .catch(error => {
+                            console.error("Erreur de lecture:", error);
+                            showToast("Impossible de démarrer la lecture. Vérifiez votre connexion.", false);
+                        });
                 }
                 isPlaying = !isPlaying;
             }
@@ -784,7 +803,7 @@
             volumeSlider.addEventListener('input', updateVolume);
             
             // Initialiser le volume
-            audioPlayer.volume = volumeSlider.value / 100;
+            audioPlayer.volume = 0.8;
             updateVolume();
         });
     </script>
