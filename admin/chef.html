@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tableau de Bord - Chef d'Entreprise Orjeun</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          50: '#f0fdf4',
+          100: '#dcfce7',
+          200: '#bbf7d0',
+          300: '#86efac',
+          400: '#4ade80',
+          500: '#22c55e',
+          600: '#16a34a',
+          700: '#15803d',
+          800: '#166534',
+          900: '#14532d',
+        },
+        secondary: {
+          50: '#fffbeb',
+          100: '#fef3c7',
+          200: '#fde68a',
+          300: '#fcd34d',
+          400: '#fbbf24',
+          500: '#f59e0b',
+          600: '#d97706',
+          700: '#b45309',
+          800: '#92400e',
+          900: '#78350f',
+        },
+        royal: {
+          50: '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#3b82f6',
+          600: '#2563eb',
+          700: '#1d4ed8',
+          800: '#1e40af',
+          900: '#1e3a8a',
+        }
+      },
+      borderRadius: {
+        'none': '0px',
+        'sm': '4px',
+        DEFAULT: '8px',
+        'md': '12px',
+        'lg': '16px',
+        'xl': '20px',
+        '2xl': '24px',
+        '3xl': '32px',
+        'full': '9999px',
+        'button': '8px'
+      }
+    }
+  }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #f9fafb;
+  background-image: radial-gradient(#e5f5ea 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+.nav-item.active {
+  color: #16a34a;
+  border-bottom: 2px solid #fbbf24;
+}
+.tab-content {
+  display: none;
+}
+.tab-content.active {
+  display: block;
+}
+.loader {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #22c55e;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.vendor-card {
+  transition: all 0.3s ease;
+  border-left: 4px solid #fbbf24;
+}
+.vendor-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+.stat-card {
+  background: linear-gradient(135deg, #f0fdf4 0%, #fffbeb 100%);
+  border: 1px solid #dcfce7;
+}
+.header-gradient {
+  background: linear-gradient(135deg, #3bb54a 0%, #fbbf24 100%);
+}
+.chart-container {
+  min-height: 300px;
+}
+.ceo-header {
+  background: linear-gradient(135deg, #3bb54a 0%, #fbbf24 100%);
+}
+.ceo-title {
+  font-family: 'Pacifico', cursive;
+}
+.promotion-card {
+  transition: all 0.3s ease;
+  border-top: 4px solid #3b82f6;
+}
+.promotion-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+}
+.gradient-text {
+  background: linear-gradient(135deg, #3bb54a 0%, #fbbf24 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+</style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+<!-- Overlay de chargement -->
+<div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
+  <div class="loader"></div>
+  <p class="ml-4 text-gray-700">Chargement des données...</p>
+</div>
+
+<!-- Nav Bar -->
+<nav class="fixed top-0 w-full ceo-header shadow-sm z-10">
+<div class="px-4 py-3 flex justify-between items-center">
+  <div class="flex items-center">
+    <span class="ceo-title text-xl text-white">Orjeun CEO</span>
+  </div>
+  <div class="flex items-center space-x-4">
+    <div id="admin-info" class="text-right">
+      <p class="text-sm font-medium text-white">Tableau de Bord</p>
+      <p class="text-xs text-white/80">Chef d'Entreprise</p>
+    </div>
+    <div class="w-10 h-10 flex items-center justify-center bg-white/20 rounded-full">
+      <i class="ri-user-star-line ri-lg text-white"></i>
+    </div>
+  </div>
+</div>
+</nav>
+
+<!-- Main Content -->
+<main class="pt-20 pb-16 px-4">
+<!-- Stats Cards -->
+<section class="mt-6 mb-8">
+<h2 class="text-lg font-semibold mb-4 text-gray-700">Aperçu Général</h2>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+  <div class="stat-card p-4 rounded shadow-sm">
+    <div class="w-8 h-8 flex items-center justify-center bg-royal-100 rounded-full mb-2">
+      <i class="ri-team-line ri-lg text-royal-600"></i>
+    </div>
+    <p class="text-xs text-gray-500">Utilisateurs Totaux</p>
+    <p id="total-users" class="text-xl font-semibold">0</p>
+  </div>
+  <div class="stat-card p-4 rounded shadow-sm">
+    <div class="w-8 h-8 flex items-center justify-center bg-green-100 rounded-full mb-2">
+      <i class="ri-user-line ri-lg text-green-600"></i>
+    </div>
+    <p class="text-xs text-gray-500">Vendeurs Actifs</p>
+    <p id="total-vendors" class="text-xl font-semibold">0</p>
+  </div>
+  <div class="stat-card p-4 rounded shadow-sm">
+    <div class="w-8 h-8 flex items-center justify-center bg-orange-100 rounded-full mb-2">
+      <i class="ri-user-settings-line ri-lg text-orange-600"></i>
+    </div>
+    <p class="text-xs text-gray-500">Responsables</p>
+    <p id="total-managers" class="text-xl font-semibold">0</p>
+  </div>
+  <div class="stat-card p-4 rounded shadow-sm">
+    <div class="w-8 h-8 flex items-center justify-center bg-purple-100 rounded-full mb-2">
+      <i class="ri-money-dollar-circle-line ri-lg text-purple-600"></i>
+    </div>
+    <p class="text-xs text-gray-500">Ventes Totales</p>
+    <p id="total-sales" class="text-xl font-semibold">0 HTG</p>
+  </div>
+</div>
+</section>
+
+<!-- Navigation Tabs -->
+<div class="bg-white rounded-t shadow-sm mb-4">
+<div class="flex border-b overflow-x-auto">
+  <button class="nav-item active flex-none px-4 py-3 text-center text-sm font-medium" data-tab="dashboard">
+    <i class="ri-dashboard-line ri-sm mr-1"></i> Tableau de bord
+  </button>
+  <button class="nav-item flex-none px-4 py-3 text-center text-sm font-medium" data-tab="profits">
+    <i class="ri-money-dollar-circle-line ri-sm mr-1"></i> Répartition Profits
+  </button>
+  <button class="nav-item flex-none px-4 py-3 text-center text-sm font-medium" data-tab="suggestions">
+    <i class="ri-lightbulb-flash-line ri-sm mr-1"></i> Suggestions
+  </button>
+  <button class="nav-item flex-none px-4 py-3 text-center text-sm font-medium" data-tab="promotions">
+    <i class="ri-user-star-line ri-sm mr-1"></i> Promotions
+  </button>
+</div>
+</div>
+
+<!-- Dashboard Tab -->
+<div id="dashboard" class="tab-content active">
+<!-- Stats Cards - Second Row -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+  <div class="stat-card p-4 rounded shadow-sm">
+    <div class="w-8 h-8 flex items-center justify-center bg-blue-100 rounded-full mb-2">
+      <i class="ri-map-pin-user-line ri-lg text-blue-600"></i>
+    </div>
+    <p class="text-xs text-gray-500">Resp. Communaux</p>
+    <p id="communal-managers" class="text-xl font-semibold">0</p>
+  </div>
+  <div class="stat-card p-4 rounded shadow-sm">
+    <div class="w-8 h-8 flex items-center justify-center bg-indigo-100 rounded-full mb-2">
+      <i class="ri-map-pin-line ri-lg text-indigo-600"></i>
+    </div>
+    <p class="text-xs text-gray-500">Resp. Départementaux</p>
+    <p id="departmental-managers" class="text-xl font-semibold">0</p>
+  </div>
+  <div class="stat-card p-4 rounded shadow-sm">
+    <div class="w-8 h-8 flex items-center justify-center bg-red-100 rounded-full mb-2">
+      <i class="ri-globe-line ri-lg text-red-600"></i>
+    </div>
+    <p class="text-xs text-gray-500">Resp. Nationaux</p>
+    <p id="national-managers" class="text-xl font-semibold">0</p>
+  </div>
+  <div class="stat-card p-4 rounded shadow-sm">
+    <div class="w-8 h-8 flex items-center justify-center bg-pink-100 rounded-full mb-2">
+      <i class="ri-shopping-bag-line ri-lg text-pink-600"></i>
+    </div>
+    <p class="text-xs text-gray-500">Produits Vendus</p>
+    <p id="total-products" class="text-xl font-semibold">0</p>
+  </div>
+</div>
+
+<!-- Performance Chart -->
+<div class="bg-white p-4 rounded shadow-sm mb-6">
+  <div class="flex justify-between items-center mb-4">
+    <h3 class="font-medium text-gray-700">Répartition des Profits</h3>
+    <div id="profit-total" class="text-xs text-gray-500">Total: 0 HTG</div>
+  </div>
+  <div id="profit-chart" class="w-full h-64 chart-container"></div>
+</div>
+
+<!-- Sales Distribution -->
+<div class="grid grid-cols-1 gap-6 mb-6">
+  <div class="bg-white p-4 rounded shadow-sm">
+    <h3 class="font-medium mb-4 text-gray-700">Répartition des Utilisateurs</h3>
+    <div id="users-distribution-chart" class="w-full h-64 chart-container"></div>
+  </div>
+</div>
+
+<!-- Professeurs Section -->
+<div class="bg-white p-4 rounded shadow-sm mb-6">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="font-medium text-gray-700">Professeurs Actifs</h3>
+    <div class="flex items-center bg-indigo-100 px-3 py-1 rounded-full">
+      <i class="ri-graduation-cap-line text-indigo-600"></i>
+      <span id="total-professors" class="ml-2 font-medium">0</span>
+    </div>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
+      <div class="flex items-center">
+        <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center mr-3">
+          <i class="ri-graduation-cap-line ri-xl text-indigo-600"></i>
+        </div>
+        <div>
+          <h4 class="font-medium text-indigo-800">Professeurs</h4>
+          <p class="text-sm text-gray-600">Nombre de professeurs connectés</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Profits Tab -->
+<div id="profits" class="tab-content">
+<div class="bg-white p-4 rounded shadow-sm mb-6">
+  <h3 class="font-medium mb-4 text-gray-700">Configuration des Pourcentages</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Pourcentage Vendeurs</label>
+      <div class="flex items-center">
+        <input type="range" min="0" max="100" value="70" class="w-full" id="vendor-percent">
+        <span class="ml-2 w-12 text-center font-medium" id="vendor-percent-value">70%</span>
+      </div>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Pourcentage Communal</label>
+      <div class="flex items-center">
+        <input type="range" min="0" max="100" value="5" class="w-full" id="communal-percent">
+        <span class="ml-2 w-12 text-center font-medium" id="communal-percent-value">5%</span>
+      </div>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Pourcentage Départemental</label>
+      <div class="flex items-center">
+        <input type="range" min="0" max="100" value="2" class="w-full" id="departmental-percent">
+        <span class="ml-2 w-12 text-center font-medium" id="departmental-percent-value">2%</span>
+      </div>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Pourcentage National</label>
+      <div class="flex items-center">
+        <input type="range" min="0" max="100" value="1" class="w-full" id="national-percent">
+        <span class="ml-2 w-12 text-center font-medium" id="national-percent-value">1%</span>
+      </div>
+    </div>
+    <div class="md:col-span-2">
+      <label class="block text-sm font-medium text-gray-700 mb-1">Pourcentage Orjeun</label>
+      <div class="flex items-center">
+        <input type="range" min="0" max="100" value="22" class="w-full" id="orjeun-percent" disabled>
+        <span class="ml-2 w-12 text-center font-medium" id="orjeun-percent-value">22%</span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+    <h4 class="font-medium text-blue-800 mb-2">Répartition Réelle</h4>
+    <p class="text-sm text-blue-700">Montant total des ventes: <span id="current-total-sales" class="font-bold">0 HTG</span></p>
+    <div class="mt-2 grid grid-cols-2 gap-2 text-sm">
+      <div class="flex justify-between">
+        <span>Vendeurs:</span>
+        <span class="font-medium" id="vendor-actual">0 HTG</span>
+      </div>
+      <div class="flex justify-between">
+        <span>Communal:</span>
+        <span class="font-medium" id="communal-actual">0 HTG</span>
+      </div>
+      <div class="flex justify-between">
+        <span>Départemental:</span>
+        <span class="font-medium" id="departmental-actual">0 HTG</span>
+      </div>
+      <div class="flex justify-between">
+        <span>National:</span>
+        <span class="font-medium" id="national-actual">0 HTG</span>
+      </div>
+      <div class="flex justify-between col-span-2 pt-2 border-t">
+        <span>Orjeun:</span>
+        <span class="font-bold" id="orjeun-actual">0 HTG</span>
+      </div>
+    </div>
+  </div>
+  
+  <button id="save-percentages" class="mt-6 w-full py-3 bg-gradient-to-r from-green-500 to-yellow-400 text-white rounded-lg font-medium hover:from-green-600 hover:to-yellow-500 transition">
+    <i class="ri-save-line ri-lg mr-2"></i> Enregistrer les Pourcentages
+  </button>
+</div>
+</div>
+
+<!-- Suggestions Tab -->
+<div id="suggestions" class="tab-content">
+<div class="bg-white p-4 rounded shadow-sm mb-4">
+  <h3 class="font-medium mb-4 text-gray-700">Créer une Nouvelle Suggestion</h3>
+  
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Type de Suggestion</label>
+      <select id="suggestion-type" class="w-full p-2 border rounded-lg">
+        <option value="produit">Produit</option>
+        <option value="formation">Formation</option>
+        <option value="emission">Émission</option>
+      </select>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Titre</label>
+      <input type="text" id="suggestion-title" placeholder="Titre de la suggestion" class="w-full p-2 border rounded-lg">
+    </div>
+  </div>
+  
+  <div class="mb-4">
+    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+    <textarea id="suggestion-description" rows="3" placeholder="Description détaillée..." class="w-full p-2 border rounded-lg"></textarea>
+  </div>
+  
+  <button id="create-suggestion" class="w-full py-3 bg-gradient-to-r from-green-500 to-yellow-400 text-white rounded-lg font-medium hover:from-green-600 hover:to-yellow-500 transition">
+    <i class="ri-add-circle-line ri-lg mr-2"></i> Créer la Suggestion
+  </button>
+</div>
+
+<div class="bg-white p-4 rounded shadow-sm">
+  <h3 class="font-medium mb-4 text-gray-700">Suggestions Actives</h3>
+  
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm text-left">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-4 py-2">Type</th>
+          <th class="px-4 py-2">Titre</th>
+          <th class="px-4 py-2">Description</th>
+          <th class="px-4 py-2">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="suggestions-list">
+        <tr>
+          <td colspan="4" class="text-center py-8 text-gray-500">
+            <i class="ri-loader-4-line ri-xl animate-spin"></i>
+            <p>Chargement des suggestions...</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- Promotions Tab -->
+<div id="promotions" class="tab-content">
+<div class="bg-white p-4 rounded shadow-sm mb-6">
+  <h3 class="font-medium mb-4 text-gray-700">Promouvoir les Meilleurs Vendeurs</h3>
+  
+  <div class="mb-6">
+    <h4 class="text-md font-medium mb-3 text-royal-700">Vendeurs à Promouvoir (Responsable Communal)</h4>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="vendors-to-promote">
+      <div class="text-center py-8 text-gray-500">
+        <i class="ri-loader-4-line ri-xl animate-spin"></i>
+        <p>Chargement des vendeurs...</p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="mb-6">
+    <h4 class="text-md font-medium mb-3 text-royal-700">Responsables Communaux à Promouvoir (Départemental)</h4>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="communal-to-promote">
+      <div class="text-center py-8 text-gray-500">
+        <i class="ri-loader-4-line ri-xl animate-spin"></i>
+        <p>Chargement des responsables...</p>
+      </div>
+    </div>
+  </div>
+  
+  <div>
+    <h4 class="text-md font-medium mb-3 text-royal-700">Responsables Départementaux à Promouvoir (National)</h4>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="departmental-to-promote">
+      <div class="text-center py-8 text-gray-500">
+        <i class="ri-loader-4-line ri-xl animate-spin"></i>
+        <p>Chargement des responsables...</p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</main>
+
+<!-- Tab Bar -->
+<nav class="fixed bottom-0 w-full bg-white border-t shadow-sm">
+<div class="grid grid-cols-4 h-14">
+  <button class="flex flex-col items-center justify-center space-y-1 text-green-500">
+    <i class="ri-dashboard-line ri-lg"></i>
+    <span class="text-xs">Tableau</span>
+  </button>
+  <button class="flex flex-col items-center justify-center space-y-1 text-gray-500">
+    <i class="ri-money-dollar-circle-line ri-lg"></i>
+    <span class="text-xs">Profits</span>
+  </button>
+  <button class="flex flex-col items-center justify-center space-y-1 text-gray-500">
+    <i class="ri-lightbulb-flash-line ri-lg"></i>
+    <span class="text-xs">Suggestions</span>
+  </button>
+  <button class="flex flex-col items-center justify-center space-y-1 text-gray-500">
+    <i class="ri-user-star-line ri-lg"></i>
+    <span class="text-xs">Promotions</span>
+  </button>
+</div>
+</nav>
+
+<script>
+// Configuration Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyDzo0khblPEzq28bS0ZuZmSMBqJm87WtNM",
+  authDomain: "orjeun-9dec4.firebaseapp.com",
+  databaseURL: "https://orjeun-9dec4-default-rtdb.firebaseio.com",
+  projectId: "orjeun-9dec4",
+  storageBucket: "orjeun-9dec4.appspot.com",
+  messagingSenderId: "979782321937",
+  appId: "1:979782321937:web:5b3971dba3240ae4b16eb0",
+  measurementId: "G-G316HCYF9E"
+};
+
+// Initialiser Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+// Variables globales
+let users = [];
+let vendors = [];
+let managers = [];
+let communalManagers = [];
+let departmentalManagers = [];
+let nationalManagers = [];
+let products = [];
+let sales = [];
+let suggestions = [];
+let professors = [];
+let profitSettings = {
+  vendorPercent: 70,
+  communalPercent: 5,
+  departmentalPercent: 2,
+  nationalPercent: 1,
+  orjeunPercent: 22
+};
+let topVendors = [];
+let topCommunal = [];
+let topDepartmental = [];
+let totalSalesAmount = 0;
+
+// Fonction d'initialisation
+function initApp() {
+  loadData();
+  
+  // Configuration des onglets
+  setupTabNavigation();
+  
+  // Configuration des sliders de pourcentage
+  setupPercentageSliders();
+  
+  // Configuration des boutons
+  document.getElementById('save-percentages').addEventListener('click', savePercentages);
+  document.getElementById('create-suggestion').addEventListener('click', createSuggestion);
+}
+
+// Charger les données depuis Firebase
+async function loadData() {
+  try {
+    // Charger les utilisateurs
+    const usersSnapshot = await database.ref('confirmed_adm_member').once('value');
+    const usersData = usersSnapshot.val() || {};
+    users = Object.keys(usersData).map(key => {
+      return { id: key, ...usersData[key] };
+    });
+    
+    // Filtrer les vendeurs et responsables
+    vendors = users.filter(user => user.role === "vendeur");
+    managers = users.filter(user => user.role === "responsable");
+    professors = users.filter(user => user.role === "professeur");
+    
+    // Filtrer par niveau de responsabilité
+    communalManagers = managers.filter(manager => manager.type === "communal");
+    departmentalManagers = managers.filter(manager => manager.type === "departemental");
+    nationalManagers = managers.filter(manager => manager.type === "national");
+    
+    // Charger les produits
+    const productsSnapshot = await database.ref('produits').once('value');
+    const productsData = productsSnapshot.val() || {};
+    products = Object.values(productsData);
+    
+    // Charger les ventes
+    const salesSnapshot = await database.ref('historique_produits').once('value');
+    const salesData = salesSnapshot.val() || {};
+    sales = Object.values(salesData);
+    
+    // Charger les suggestions
+    const suggestionsSnapshot = await database.ref('suggestions').once('value');
+    const suggestionsData = suggestionsSnapshot.val() || {};
+    suggestions = Object.values(suggestionsData);
+    
+    // Charger les paramètres de profit
+    const profitSnapshot = await database.ref('profit').once('value');
+    const profitData = profitSnapshot.val();
+    if (profitData) {
+      profitSettings = profitData;
+    } else {
+      // Initialiser les paramètres de profit s'ils n'existent pas
+      await database.ref('profit').set(profitSettings);
+    }
+    
+    // Calculer les meilleurs vendeurs
+    calculateTopVendors();
+    
+    // Mettre à jour les statistiques
+    updateStatistics();
+    
+    // Mettre à jour les graphiques
+    updateCharts();
+    
+    // Mettre à jour les suggestions
+    updateSuggestions();
+    
+    // Mettre à jour les promotions
+    updatePromotions();
+    
+    // Mettre à jour la répartition réelle
+    updateActualDistribution();
+    
+    // Cacher le loader
+    document.getElementById('loading-overlay').style.display = 'none';
+    
+  } catch (error) {
+    console.error("Erreur lors du chargement des données:", error);
+    alert("Erreur de chargement des données: " + error.message);
+    document.getElementById('loading-overlay').style.display = 'none';
+  }
+}
+
+// Calculer les meilleurs vendeurs
+function calculateTopVendors() {
+  // Calculer les ventes par vendeur
+  const vendorSales = {};
+  
+  // Parcourir tous les produits pour calculer les ventes
+  [...products, ...sales].forEach(product => {
+    const vendorName = product.Non_vendeur || product.Nom_vendeur || product.vendeur || "Inconnu";
+    
+    if (!vendorSales[vendorName]) {
+      vendorSales[vendorName] = 0;
+    }
+    
+    // Calculer les quantités
+    const initialQty = parseInt(product.quantity) || 0;
+    const currentQty = parseInt(product.Quantity_actual) || 0;
+    const soldQty = initialQty - currentQty;
+    const price = parseFloat(product.price) || 0;
+    const salesAmount = soldQty * price;
+    
+    vendorSales[vendorName] += salesAmount;
+  });
+  
+  // Trier les vendeurs par ventes
+  topVendors = Object.keys(vendorSales)
+    .map(vendorName => ({
+      name: vendorName,
+      sales: vendorSales[vendorName]
+    }))
+    .sort((a, b) => b.sales - a.sales)
+    .slice(0, 10);
+}
+
+// Mettre à jour les statistiques
+function updateStatistics() {
+  // Calculer le total des ventes
+  totalSalesAmount = [...products, ...sales].reduce((sum, product) => {
+    const initialQty = parseInt(product.quantity) || 0;
+    const currentQty = parseInt(product.Quantity_actual) || 0;
+    const soldQty = initialQty - currentQty;
+    const price = parseFloat(product.price) || 0;
+    return sum + (soldQty * price);
+  }, 0);
+  
+  // Calculer le nombre total de produits vendus
+  const totalProductsSold = [...products, ...sales].reduce((sum, product) => {
+    const initialQty = parseInt(product.quantity) || 0;
+    const currentQty = parseInt(product.Quantity_actual) || 0;
+    return sum + (initialQty - currentQty);
+  }, 0);
+  
+  // Mettre à jour les statistiques
+  document.getElementById('total-users').textContent = users.length.toLocaleString();
+  document.getElementById('total-vendors').textContent = vendors.length.toLocaleString();
+  document.getElementById('total-managers').textContent = managers.length.toLocaleString();
+  document.getElementById('communal-managers').textContent = communalManagers.length.toLocaleString();
+  document.getElementById('departmental-managers').textContent = departmentalManagers.length.toLocaleString();
+  document.getElementById('national-managers').textContent = nationalManagers.length.toLocaleString();
+  document.getElementById('total-sales').textContent = totalSalesAmount.toLocaleString('fr-FR') + ' HTG';
+  document.getElementById('total-products').textContent = totalProductsSold.toLocaleString();
+  document.getElementById('profit-total').textContent = `Total: ${totalSalesAmount.toLocaleString('fr-FR')} HTG`;
+  document.getElementById('total-professors').textContent = professors.length;
+  document.getElementById('current-total-sales').textContent = totalSalesAmount.toLocaleString('fr-FR') + ' HTG';
+}
+
+// Mettre à jour les graphiques
+function updateCharts() {
+  // Graphique de répartition des profits
+  const profitChart = echarts.init(document.getElementById('profit-chart'));
+  
+  // Calculer les montants réels
+  const vendorAmount = (totalSalesAmount * profitSettings.vendorPercent / 100);
+  const communalAmount = (totalSalesAmount * profitSettings.communalPercent / 100);
+  const departmentalAmount = (totalSalesAmount * profitSettings.departmentalPercent / 100);
+  const nationalAmount = (totalSalesAmount * profitSettings.nationalPercent / 100);
+  const orjeunAmount = (totalSalesAmount * profitSettings.orjeunPercent / 100);
+  
+  const profitOption = {
+    tooltip: {
+      trigger: 'item',
+      formatter: function(params) {
+        const percent = (params.value / totalSalesAmount * 100).toFixed(1);
+        return `${params.name}: ${params.value.toLocaleString('fr-FR')} HTG (${percent}%)`;
+      }
+    },
+    legend: {
+      orient: 'vertical',
+      right: 10,
+      top: 'center'
+    },
+    series: [
+      {
+        name: 'Répartition des Profits',
+        type: 'pie',
+        radius: ['40%', '70%'],
+        avoidLabelOverlap: true,
+        itemStyle: {
+          borderRadius: 10,
+          borderColor: '#fff',
+          borderWidth: 2
+        },
+        label: {
+          show: false,
+          position: 'center'
+        },
+        emphasis: {
+          label: {
+            show: true,
+            fontSize: 14,
+            fontWeight: 'bold'
+          }
+        },
+        labelLine: {
+          show: false
+        },
+        data: [
+          {value: vendorAmount, name: 'Vendeurs', itemStyle: {color: '#22c55e'}},
+          {value: communalAmount, name: 'Communal', itemStyle: {color: '#3b82f6'}},
+          {value: departmentalAmount, name: 'Départemental', itemStyle: {color: '#8b5cf6'}},
+          {value: nationalAmount, name: 'National', itemStyle: {color: '#ec4899'}},
+          {value: orjeunAmount, name: 'Orjeun', itemStyle: {color: '#f59e0b'}}
+        ]
+      }
+    ]
+  };
+  profitChart.setOption(profitOption);
+  
+  // Graphique de répartition des utilisateurs
+  const usersChart = echarts.init(document.getElementById('users-distribution-chart'));
+  const usersOption = {
+    tooltip: {
+      trigger: 'item',
+      formatter: '{b}: {c} ({d}%)'
+    },
+    legend: {
+      bottom: 10,
+      left: 'center'
+    },
+    series: [
+      {
+        name: 'Utilisateurs',
+        type: 'pie',
+        radius: ['30%', '60%'],
+        center: ['50%', '40%'],
+        avoidLabelOverlap: true,
+        itemStyle: {
+          borderRadius: 10,
+          borderColor: '#fff',
+          borderWidth: 2
+        },
+        label: {
+          show: false
+        },
+        emphasis: {
+          label: {
+            show: true,
+            fontSize: 14
+          }
+        },
+        labelLine: {
+          show: false
+        },
+        data: [
+          {value: vendors.length, name: 'Vendeurs', itemStyle: {color: '#22c55e'}},
+          {value: communalManagers.length, name: 'Resp. Communaux', itemStyle: {color: '#3b82f6'}},
+          {value: departmentalManagers.length, name: 'Resp. Départementaux', itemStyle: {color: '#8b5cf6'}},
+          {value: nationalManagers.length, name: 'Resp. Nationaux', itemStyle: {color: '#ec4899'}},
+          {value: professors.length, name: 'Professeurs', itemStyle: {color: '#a855f7'}}
+        ]
+      }
+    ]
+  };
+  usersChart.setOption(usersOption);
+  
+  // Redimensionnement des graphiques lors du redimensionnement de la fenêtre
+  window.addEventListener('resize', function() {
+    profitChart.resize();
+    usersChart.resize();
+  });
+}
+
+// Mettre à jour la répartition réelle
+function updateActualDistribution() {
+  // Calculer les montants réels
+  const vendorAmount = (totalSalesAmount * profitSettings.vendorPercent / 100);
+  const communalAmount = (totalSalesAmount * profitSettings.communalPercent / 100);
+  const departmentalAmount = (totalSalesAmount * profitSettings.departmentalPercent / 100);
+  const nationalAmount = (totalSalesAmount * profitSettings.nationalPercent / 100);
+  const orjeunAmount = (totalSalesAmount * profitSettings.orjeunPercent / 100);
+  
+  // Mettre à jour l'affichage
+  document.getElementById('vendor-actual').textContent = vendorAmount.toLocaleString('fr-FR') + ' HTG';
+  document.getElementById('communal-actual').textContent = communalAmount.toLocaleString('fr-FR') + ' HTG';
+  document.getElementById('departmental-actual').textContent = departmentalAmount.toLocaleString('fr-FR') + ' HTG';
+  document.getElementById('national-actual').textContent = nationalAmount.toLocaleString('fr-FR') + ' HTG';
+  document.getElementById('orjeun-actual').textContent = orjeunAmount.toLocaleString('fr-FR') + ' HTG';
+}
+
+// Mettre à jour les suggestions
+function updateSuggestions() {
+  const suggestionsList = document.getElementById('suggestions-list');
+  suggestionsList.innerHTML = '';
+  
+  if (suggestions.length === 0) {
+    suggestionsList.innerHTML = `
+      <tr>
+        <td colspan="4" class="text-center py-8 text-gray-500">
+          <i class="ri-information-line ri-xl"></i>
+          <p>Aucune suggestion active</p>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
+  suggestions.forEach(suggestion => {
+    const row = document.createElement('tr');
+    row.className = 'border-b hover:bg-gray-50';
+    row.innerHTML = `
+      <td class="px-4 py-3">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          suggestion.type === 'produit' ? 'bg-green-100 text-green-800' : 
+          suggestion.type === 'formation' ? 'bg-blue-100 text-blue-800' : 
+          'bg-purple-100 text-purple-800'
+        }">
+          ${suggestion.type.charAt(0).toUpperCase() + suggestion.type.slice(1)}
+        </span>
+      </td>
+      <td class="px-4 py-3 font-medium">${suggestion.title}</td>
+      <td class="px-4 py-3">${suggestion.description}</td>
+      <td class="px-4 py-3">
+        <button class="delete-suggestion text-red-600 hover:text-red-900 mr-2" data-id="${suggestion.id}">
+          <i class="ri-delete-bin-line ri-lg"></i>
+        </button>
+      </td>
+    `;
+    suggestionsList.appendChild(row);
+  });
+  
+  // Ajouter les événements de suppression
+  document.querySelectorAll('.delete-suggestion').forEach(button => {
+    button.addEventListener('click', function() {
+      const suggestionId = this.getAttribute('data-id');
+      deleteSuggestion(suggestionId);
+    });
+  });
+}
+
+// Mettre à jour les promotions
+function updatePromotions() {
+  const vendorsContainer = document.getElementById('vendors-to-promote');
+  const communalContainer = document.getElementById('communal-to-promote');
+  const departmentalContainer = document.getElementById('departmental-to-promote');
+  
+  vendorsContainer.innerHTML = '';
+  communalContainer.innerHTML = '';
+  departmentalContainer.innerHTML = '';
+  
+  // Ajouter les vendeurs (top 10)
+  if (topVendors.length > 0) {
+    topVendors.slice(0, 10).forEach(vendor => {
+      const card = createPromotionCard(vendor, 'vendeur');
+      vendorsContainer.appendChild(card);
+    });
+  } else {
+    vendorsContainer.innerHTML = '<div class="col-span-3 text-center py-8 text-gray-500">Aucun vendeur à promouvoir</div>';
+  }
+  
+  // Ajouter les responsables communaux
+  if (communalManagers.length > 0) {
+    communalManagers.forEach(manager => {
+      const card = createPromotionCard({
+        name: `${manager.nom} ${manager.prenom}`,
+        id: manager.id
+      }, 'communal');
+      communalContainer.appendChild(card);
+    });
+  } else {
+    communalContainer.innerHTML = '<div class="col-span-3 text-center py-8 text-gray-500">Aucun responsable communal à promouvoir</div>';
+  }
+  
+  // Ajouter les responsables départementaux
+  if (departmentalManagers.length > 0) {
+    departmentalManagers.forEach(manager => {
+      const card = createPromotionCard({
+        name: `${manager.nom} ${manager.prenom}`,
+        id: manager.id
+      }, 'departmental');
+      departmentalContainer.appendChild(card);
+    });
+  } else {
+    departmentalContainer.innerHTML = '<div class="col-span-3 text-center py-8 text-gray-500">Aucun responsable départemental à promouvoir</div>';
+  }
+}
+
+function createPromotionCard(person, type) {
+  const card = document.createElement('div');
+  card.className = 'promotion-card bg-white p-4 rounded shadow-sm';
+  
+  let content = '';
+  if (type === 'vendeur') {
+    content = `
+      <div class="flex items-center mb-3">
+        <div class="w-10 h-10 flex items-center justify-center bg-royal-100 rounded-full mr-3">
+          <span class="text-sm font-medium text-royal-600">${person.name.split(' ').map(n => n[0]).join('')}</span>
+        </div>
+        <div>
+          <h3 class="font-medium">${person.name}</h3>
+          <p class="text-xs text-gray-500">Ventes: ${person.sales ? person.sales.toLocaleString('fr-FR') : '0'} HTG</p>
+        </div>
+      </div>
+      <div class="mt-2 flex justify-between items-center">
+        <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Top Vendeur</span>
+        <button class="promote-btn text-xs bg-royal-600 text-white px-3 py-1 rounded hover:bg-royal-700 transition" data-id="${person.name}" data-type="vendor">
+          Promouvoir
+        </button>
+      </div>
+    `;
+  } else if (type === 'communal') {
+    content = `
+      <div class="flex items-center mb-3">
+        <div class="w-10 h-10 flex items-center justify-center bg-green-100 rounded-full mr-3">
+          <span class="text-sm font-medium text-green-600">${person.name.split(' ').map(n => n[0]).join('')}</span>
+        </div>
+        <div>
+          <h3 class="font-medium">${person.name}</h3>
+          <p class="text-xs text-gray-500">Responsable communal</p>
+        </div>
+      </div>
+      <div class="mt-2 flex justify-between items-center">
+        <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Communal</span>
+        <button class="promote-btn text-xs bg-royal-600 text-white px-3 py-1 rounded hover:bg-royal-700 transition" data-id="${person.id}" data-type="communal">
+          Promouvoir
+        </button>
+      </div>
+    `;
+  } else {
+    content = `
+      <div class="flex items-center mb-3">
+        <div class="w-10 h-10 flex items-center justify-center bg-purple-100 rounded-full mr-3">
+          <span class="text-sm font-medium text-purple-600">${person.name.split(' ').map(n => n[0]).join('')}</span>
+        </div>
+        <div>
+          <h3 class="font-medium">${person.name}</h3>
+          <p class="text-xs text-gray-500">Responsable départemental</p>
+        </div>
+      </div>
+      <div class="mt-2 flex justify-between items-center">
+        <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Départemental</span>
+        <button class="promote-btn text-xs bg-royal-600 text-white px-3 py-1 rounded hover:bg-royal-700 transition" data-id="${person.id}" data-type="departmental">
+          Promouvoir
+        </button>
+      </div>
+    `;
+  }
+  
+  card.innerHTML = content;
+  
+  // Ajouter l'événement de promotion
+  const promoteBtn = card.querySelector('.promote-btn');
+  promoteBtn.addEventListener('click', function() {
+    const id = this.getAttribute('data-id');
+    const type = this.getAttribute('data-type');
+    promoteUser(id, type);
+  });
+  
+  return card;
+}
+
+// Configuration des sliders de pourcentage
+function setupPercentageSliders() {
+  const vendorSlider = document.getElementById('vendor-percent');
+  const communalSlider = document.getElementById('communal-percent');
+  const departmentalSlider = document.getElementById('departmental-percent');
+  const nationalSlider = document.getElementById('national-percent');
+  
+  // Mettre les valeurs actuelles
+  vendorSlider.value = profitSettings.vendorPercent;
+  communalSlider.value = profitSettings.communalPercent;
+  departmentalSlider.value = profitSettings.departmentalPercent;
+  nationalSlider.value = profitSettings.nationalPercent;
+  
+  document.getElementById('vendor-percent-value').textContent = profitSettings.vendorPercent + '%';
+  document.getElementById('communal-percent-value').textContent = profitSettings.communalPercent + '%';
+  document.getElementById('departmental-percent-value').textContent = profitSettings.departmentalPercent + '%';
+  document.getElementById('national-percent-value').textContent = profitSettings.nationalPercent + '%';
+  
+  // Mettre à jour le pourcentage Orjeun
+  const total = profitSettings.vendorPercent + profitSettings.communalPercent + 
+               profitSettings.departmentalPercent + profitSettings.nationalPercent;
+  const orjeunPercent = 100 - total;
+  profitSettings.orjeunPercent = orjeunPercent;
+  
+  document.getElementById('orjeun-percent-value').textContent = orjeunPercent + '%';
+  
+  // Mettre à jour la répartition réelle
+  updateActualDistribution();
+  
+  // Ajouter les événements
+  vendorSlider.addEventListener('input', updatePercentageValues);
+  communalSlider.addEventListener('input', updatePercentageValues);
+  departmentalSlider.addEventListener('input', updatePercentageValues);
+  nationalSlider.addEventListener('input', updatePercentageValues);
+}
+
+// Mettre à jour les valeurs des pourcentages
+function updatePercentageValues() {
+  const vendorPercent = document.getElementById('vendor-percent').value;
+  const communalPercent = document.getElementById('communal-percent').value;
+  const departmentalPercent = document.getElementById('departmental-percent').value;
+  const nationalPercent = document.getElementById('national-percent').value;
+  
+  document.getElementById('vendor-percent-value').textContent = vendorPercent + '%';
+  document.getElementById('communal-percent-value').textContent = communalPercent + '%';
+  document.getElementById('departmental-percent-value').textContent = departmentalPercent + '%';
+  document.getElementById('national-percent-value').textContent = nationalPercent + '%';
+  
+  // Calculer le pourcentage Orjeun
+  const total = parseInt(vendorPercent) + parseInt(communalPercent) + 
+                parseInt(departmentalPercent) + parseInt(nationalPercent);
+  const orjeunPercent = 100 - total;
+  
+  document.getElementById('orjeun-percent-value').textContent = orjeunPercent + '%';
+  
+  // Mettre à jour la répartition réelle
+  updateActualDistribution();
+}
+
+// Sauvegarder les pourcentages
+function savePercentages() {
+  const vendorPercent = document.getElementById('vendor-percent').value;
+  const communalPercent = document.getElementById('communal-percent').value;
+  const departmentalPercent = document.getElementById('departmental-percent').value;
+  const nationalPercent = document.getElementById('national-percent').value;
+  
+  // Calculer le pourcentage Orjeun
+  const total = parseInt(vendorPercent) + parseInt(communalPercent) + 
+                parseInt(departmentalPercent) + parseInt(nationalPercent);
+  const orjeunPercent = 100 - total;
+  
+  const newProfitSettings = {
+    vendorPercent: parseInt(vendorPercent),
+    communalPercent: parseInt(communalPercent),
+    departmentalPercent: parseInt(departmentalPercent),
+    nationalPercent: parseInt(nationalPercent),
+    orjeunPercent: orjeunPercent
+  };
+  
+  // Enregistrer dans Firebase
+  database.ref('profit').set(newProfitSettings)
+    .then(() => {
+      profitSettings = newProfitSettings;
+      alert('Pourcentages enregistrés avec succès!');
+      updateCharts();
+      updateActualDistribution();
+    })
+    .catch(error => {
+      console.error("Erreur lors de l'enregistrement:", error);
+      alert("Erreur lors de l'enregistrement: " + error.message);
+    });
+}
+
+// Créer une suggestion
+function createSuggestion() {
+  const type = document.getElementById('suggestion-type').value;
+  const title = document.getElementById('suggestion-title').value;
+  const description = document.getElementById('suggestion-description').value;
+  
+  if (!title || !description) {
+    alert('Veuillez remplir tous les champs');
+    return;
+  }
+  
+  // Créer l'objet suggestion
+  const newSuggestion = {
+    type,
+    title,
+    description,
+    createdAt: new Date().getTime()
+  };
+  
+  // Enregistrer dans Firebase
+  const newRef = database.ref('suggestions').push();
+  newSuggestion.id = newRef.key;
+  
+  newRef.set(newSuggestion)
+    .then(() => {
+      suggestions.push(newSuggestion);
+      updateSuggestions();
+      
+      // Réinitialiser le formulaire
+      document.getElementById('suggestion-title').value = '';
+      document.getElementById('suggestion-description').value = '';
+      
+      alert('Suggestion créée avec succès!');
+    })
+    .catch(error => {
+      console.error("Erreur lors de la création:", error);
+      alert("Erreur lors de la création: " + error.message);
+    });
+}
+
+// Supprimer une suggestion
+function deleteSuggestion(suggestionId) {
+  if (!confirm('Êtes-vous sûr de vouloir supprimer cette suggestion ?')) return;
+  
+  database.ref('suggestions/' + suggestionId).remove()
+    .then(() => {
+      suggestions = suggestions.filter(s => s.id !== suggestionId);
+      updateSuggestions();
+      alert('Suggestion supprimée avec succès!');
+    })
+    .catch(error => {
+      console.error("Erreur lors de la suppression:", error);
+      alert("Erreur lors de la suppression: " + error.message);
+    });
+}
+
+// Promouvoir un utilisateur
+function promoteUser(id, type) {
+  let newType = '';
+  
+  switch(type) {
+    case 'vendor':
+      newType = 'communal';
+      break;
+    case 'communal':
+      newType = 'departemental';
+      break;
+    case 'departmental':
+      newType = 'national';
+      break;
+    default:
+      alert('Type de promotion invalide');
+      return;
+  }
+  
+  // Trouver l'utilisateur dans la liste
+  const user = users.find(u => u.id === id || `${u.nom} ${u.prenom}` === id);
+  
+  if (!user) {
+    alert('Utilisateur non trouvé');
+    return;
+  }
+  
+  // Mettre à jour le type
+  const updates = {
+    type: newType,
+    role: 'responsable'
+  };
+  
+  // Enregistrer dans Firebase
+  database.ref('confirmed_adm_member/' + user.id).update(updates)
+    .then(() => {
+      alert(`Utilisateur promu avec succès! Nouveau rôle: Responsable ${newType}`);
+      loadData(); // Recharger les données
+    })
+    .catch(error => {
+      console.error("Erreur lors de la promotion:", error);
+      alert("Erreur lors de la promotion: " + error.message);
+    });
+}
+
+// Configuration de la navigation par onglets
+function setupTabNavigation() {
+  const navItems = document.querySelectorAll('.nav-item');
+  const tabContents = document.querySelectorAll('.tab-content');
+  const bottomTabs = document.querySelectorAll('.fixed.bottom-0 button');
+  
+  navItems.forEach(item => {
+    item.addEventListener('click', function() {
+      const tabId = this.getAttribute('data-tab');
+      
+      // Mettre à jour l'onglet actif
+      navItems.forEach(navItem => navItem.classList.remove('active'));
+      this.classList.add('active');
+      
+      // Mettre à jour le contenu actif
+      tabContents.forEach(content => {
+        if (content.id === tabId) {
+          content.classList.add('active');
+        } else {
+          content.classList.remove('active');
+        }
+      });
+      
+      // Mettre à jour les onglets du bas
+      const tabIndex = Array.from(navItems).indexOf(this);
+      bottomTabs.forEach((tab, index) => {
+        tab.classList.remove('text-green-500');
+        tab.classList.add('text-gray-500');
+        if (index === tabIndex) {
+          tab.classList.remove('text-gray-500');
+          tab.classList.add('text-green-500');
+        }
+      });
+    });
+  });
+  
+  // Configurer les onglets du bas
+  bottomTabs.forEach((tab, index) => {
+    tab.addEventListener('click', function() {
+      if (navItems[index]) {
+        navItems[index].click();
+      }
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  initApp();
+});
+</script>
+</body>
+</html>
