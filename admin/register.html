@@ -378,8 +378,8 @@
                 }
                 
                 const telephone = telephoneInput.value;
-                if(telephone.length !== 10) {
-                    showNotification('Veuillez entrer un numéro de téléphone valide (10 chiffres)', 'red');
+                if(telephone.length < 8) {
+                    showNotification('Veuillez entrer un numéro de téléphone valide', 'red');
                     telephoneInput.classList.add('border-red-500');
                     telephoneInput.focus();
                     return;
