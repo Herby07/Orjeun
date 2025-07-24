@@ -339,7 +339,6 @@ input:focus, textarea:focus, select:focus {
 <div id="loadingOverlay" class="loading-overlay">
   <div class="loading-spinner"></div>
 </div>
-
 <nav class="fixed top-0 left-0 w-full bg-white shadow-sm z-10">
   <div class="px-4 py-3 flex items-center justify-between">
     <div class="flex items-center">
@@ -359,12 +358,10 @@ input:focus, textarea:focus, select:focus {
     <p class="text-gray-600 mt-1">Créez et gérez vos formations en ligne et professionnelles</p>
     <div class="h-1 w-20 bg-primary mt-3 rounded-full"></div>
   </div>
-  
   <div class="type-selector bg-white rounded-lg shadow-sm p-2">
     <button id="btnOnline" class="active" type="button">Formation en Ligne</button>
     <button id="btnProfessional" type="button">Formation Professionnelle</button>
   </div>
-  
   <div id="onlineForm" class="type-section active bg-white rounded-lg shadow-sm p-6 mb-10">
     <h2 class="text-lg font-semibold mb-4 text-gray-800 flex items-center">
       <i class="ri-computer-line mr-2 text-tertiary"></i>
@@ -379,13 +376,10 @@ input:focus, textarea:focus, select:focus {
         <label for="onlineDescription" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
         <textarea id="onlineDescription" name="description" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-button text-sm" required></textarea>
       </div>
-      
       <div class="mt-4">
         <label class="block text-sm font-medium text-gray-700 mb-1">Contenu de la formation</label>
-        
         <div id="contentBlocks" class="space-y-4">
         </div>
-        
         <button type="button" id="addBlockBtn" class="w-full mt-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 px-4 rounded-button transition-colors !rounded-button">
           <span class="flex items-center justify-center">
             <i class="ri-add-line mr-2"></i>
@@ -393,7 +387,6 @@ input:focus, textarea:focus, select:focus {
           </span>
         </button>
       </div>
-      
       <div class="pt-4">
         <button type="submit" class="w-full bg-tertiary hover:bg-tertiary/90 text-white font-medium py-2.5 px-4 rounded-button transition-colors !rounded-button">
           <span class="flex items-center justify-center">
@@ -404,7 +397,6 @@ input:focus, textarea:focus, select:focus {
       </div>
     </form>
   </div>
-  
   <div id="professionalForm" class="type-section bg-white rounded-lg shadow-sm p-6 mb-10">
     <h2 class="text-lg font-semibold mb-4 text-gray-800 flex items-center">
       <i class="ri-building-line mr-2 text-secondary"></i>
@@ -429,7 +421,6 @@ input:focus, textarea:focus, select:focus {
           <input type="time" id="proHeure" name="heure" class="w-full px-4 py-2 border border-gray-300 rounded-button text-sm" required>
         </div>
       </div>
-      
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label for="proDepartement" class="block text-sm font-medium text-gray-700 mb-1">Département</label>
@@ -444,17 +435,14 @@ input:focus, textarea:focus, select:focus {
           </select>
         </div>
       </div>
-      
       <div id="nouvelleCommuneField" class="hidden-field">
         <label for="nouvelleCommuneInput" class="block text-sm font-medium text-gray-700 mb-1">Nouvelle commune</label>
         <input type="text" id="nouvelleCommuneInput" name="nouvelleCommune" placeholder="Entrez le nom de la nouvelle commune" class="w-full px-4 py-2 border border-gray-300 rounded-button text-sm">
       </div>
-      
       <div>
         <label for="proParticipants" class="block text-sm font-medium text-gray-700 mb-1">Nombre maximum de participants</label>
         <input type="number" id="proParticipants" name="participants" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-button text-sm" required>
       </div>
-      
       <div class="pt-4">
         <button type="submit" class="w-full bg-secondary hover:bg-secondary/90 text-white font-medium py-2.5 px-4 rounded-button transition-colors !rounded-button">
           <span class="flex items-center justify-center">
@@ -465,35 +453,29 @@ input:focus, textarea:focus, select:focus {
       </div>
     </form>
   </div>
-  
   <div id="notification" class="notification mt-4 py-3 px-4 rounded-md hidden">
     <div class="flex items-center">
       <i id="notificationIcon" class="mr-2"></i>
       <span id="notificationMessage"></span>
     </div>
   </div>
-  
   <div id="formationEditSection" class="bg-white rounded-lg shadow-sm p-6 mb-10">
     <div class="flex justify-between items-center mb-6">
       <h2 id="editFormationTitle" class="text-lg font-semibold text-gray-800">Édition de la formation</h2>
       <button id="cancelEditBtn" class="px-4 py-2 border border-gray-300 rounded-button text-gray-700 hover:bg-gray-50 !rounded-button">Retour à l'historique</button>
     </div>
-    
     <div class="mb-6">
       <label for="editTitre" class="block text-sm font-medium text-gray-700 mb-1">Titre de la formation</label>
       <input type="text" id="editTitre" class="w-full px-4 py-2 border border-gray-300 rounded-button text-sm" required>
     </div>
-    
     <div class="mb-6">
       <label for="editDescription" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
       <textarea id="editDescription" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-button text-sm" required></textarea>
     </div>
-    
     <div class="mb-4">
       <label class="block text-sm font-medium text-gray-700 mb-1">Contenu de la formation</label>
       <div class="edit-blocks-container" id="editContentBlocks">
       </div>
-      
       <button type="button" id="addEditBlockBtn" class="w-full mt-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 px-4 rounded-button transition-colors !rounded-button">
         <span class="flex items-center justify-center">
           <i class="ri-add-line mr-2"></i>
@@ -501,7 +483,6 @@ input:focus, textarea:focus, select:focus {
         </span>
       </button>
     </div>
-    
     <div class="flex justify-end space-x-3 pt-4">
       <button id="saveEditBtn" class="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white font-medium rounded-button transition-colors !rounded-button">
         <span class="flex items-center justify-center">
@@ -512,7 +493,6 @@ input:focus, textarea:focus, select:focus {
       <button id="cancelEditBtn2" class="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-button hover:bg-gray-50 !rounded-button">Annuler</button>
     </div>
   </div>
-  
   <div id="formationsHistorySection" class="bg-white rounded-lg shadow-sm p-6">
     <h2 class="text-lg font-semibold mb-4 text-gray-800">Historique des Formations</h2>
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
@@ -538,7 +518,6 @@ input:focus, textarea:focus, select:focus {
     </div>
   </div>
 </div>
-
 <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
   <div class="bg-white rounded-lg p-6 w-11/12 max-w-md">
     <h3 id="confirmTitle" class="text-lg font-semibold mb-3">Confirmation</h3>
@@ -549,7 +528,6 @@ input:focus, textarea:focus, select:focus {
     </div>
   </div>
 </div>
-
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script>
@@ -600,6 +578,7 @@ const cancelEditBtn = document.getElementById('cancelEditBtn');
 const cancelEditBtn2 = document.getElementById('cancelEditBtn2');
 const saveEditBtn = document.getElementById('saveEditBtn');
 const addEditBlockBtn = document.getElementById('addEditBlockBtn');
+
 const departementSelect = document.getElementById('proDepartement');
 const communeSelect = document.getElementById('proCommune');
 const nouvelleCommuneField = document.getElementById('nouvelleCommuneField');
@@ -809,9 +788,10 @@ function displayFormations() {
         showConfirmModal(
           'Annuler la formation',
           'Êtes-vous sûr de vouloir annuler cette formation ? Les participants seront notifiés.',
-          () => cancelFormation(formationId))
+          () => cancelFormation(formationId)
         );
       });
+    });
     document.querySelectorAll('.edit-formation').forEach(button => {
       button.addEventListener('click', function() {
         const formationId = this.getAttribute('data-id');
@@ -899,9 +879,6 @@ async function uploadPDF(file) {
       showNotification("Seuls les fichiers PDF sont acceptés", "error");
       return null;
     }
-    const statusElement = document.createElement('div');
-    statusElement.className = 'upload-status';
-    statusElement.innerHTML = '<i class="ri-loader-4-line"></i> Téléchargement en cours...';
     const formData = new FormData();
     formData.append("file", file);
     const uploadRes = await fetch("https://upload.gofile.io/uploadFile", {
