@@ -194,7 +194,7 @@ Réessayer
 </main>
 
 <div class="fixed bottom-0 left-0 w-full bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.05)] px-2 py-2 grid grid-cols-5 gap-1">
-    <a href="javascript:void(0)" data-target="dashboard" class="nav-link flex flex-col items-center justify-center text-gray-500">
+    <a href="javascript:void(0)" data-target="#" class="nav-link flex flex-col items-center justify-center text-gray-500">
         <div class="w-6 h-6 flex items-center justify-center">
             <i class="ri-home-5-fill ri-lg"></i>
         </div>
@@ -409,7 +409,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       actionBtn.addEventListener('click', async (e) => {
         if (isOnline) {
           alert("Vous devez vous inscrire pour accéder à cette formation");
-          window.location.href = "inscription.html";
+          window.location.href = "../register";
         } else {
           const message = encodeURIComponent(
             `Bonjour, je suis intéressé par la formation "${formation.titre}" prévue le ${formation.date} à ${formation.heure}.`
@@ -434,7 +434,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   document.getElementById('retryButton').addEventListener('click', loadFormations);
 
-  // Gestion de la navigation
+  
   document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', function(e) {
       e.preventDefault();
