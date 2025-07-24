@@ -1223,7 +1223,25 @@ async function promoteUser(id, type, region = null) {
         return;
     }
     
+    // Mise à jour de l'utilisateur promu
     await database.ref('confirmed_adm_member/' + user.id).update(updates);
+    
+    // Vérification et mise à jour dans la table membres
+    if (user.email) {
+      const membresRef = database.ref('membres');
+      const membresSnapshot = await membresRef.orderByChild('email').equalTo(user.email).once('value');
+      const membreData = membresSnapshot.val();
+      
+      if (membreData) {
+        const updatesMembres = {};
+        Object.keys(membreData).forEach(key => {
+          updatesMembres[`membres/${key}/role`] = "responsable";
+          updatesMembres[`membres/${key}/type`] = newType;
+        });
+        
+        await database.ref().update(updatesMembres);
+      }
+    }
     
     await recordAction("Promotion d'utilisateur", `${user.nom} ${user.prenom} promu au rôle: Responsable ${newType}`);
     
