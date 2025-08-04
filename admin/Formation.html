@@ -11,6 +11,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+<!-- Uploadcare -->
+<script src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js"></script>
 <style>
 :where([class^="ri-"])::before { content: "\f3c2"; }
 body {
@@ -333,6 +335,26 @@ input:focus, textarea:focus, select:focus {
   padding: 20px;
   background-color: #f8fafc;
 }
+
+/* Ajout pour le bouton de suppression */
+.delete-block-btn {
+  position: absolute;
+  top: 16px;
+  right: 60px; /* Position ajustée pour éviter la superposition */
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fef2f2;
+  border-radius: 6px;
+  color: #ef4444;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.delete-block-btn:hover {
+  background: #fee2e2;
+}
 </style>
 </head>
 <body class="min-h-screen pt-16 pb-24">
@@ -583,6 +605,9 @@ const departementSelect = document.getElementById('proDepartement');
 const communeSelect = document.getElementById('proCommune');
 const nouvelleCommuneField = document.getElementById('nouvelleCommuneField');
 const nouvelleCommuneInput = document.getElementById('nouvelleCommuneInput');
+
+
+const UPLOADCARE_PUB_KEY = 'ffd4bffb1936c80f5abd';
 
 let currentTab = 'avenir';
 let currentSearch = '';
@@ -915,11 +940,11 @@ function addContentBlock(container, isEditMode = false) {
         <i class="ri-arrow-down-s-line"></i>
       </button>
     </div>
+    <button type="button" class="delete-block-btn" title="Supprimer">
+      <i class="ri-delete-bin-line"></i>
+    </button>
     <div class="flex justify-between items-center mb-3">
       <h3 class="text-sm font-medium text-gray-700">Nouveau bloc de contenu</h3>
-      <button type="button" class="delete-block-btn text-red-600">
-        <i class="ri-delete-bin-line"></i>
-      </button>
     </div>
     <div class="mb-4">
       <label class="block text-sm font-medium text-gray-700 mb-1">Type de contenu</label>
@@ -997,52 +1022,51 @@ function addContentBlock(container, isEditMode = false) {
       contentForm.innerHTML = `
         <div class="mb-3">
           <label class="block text-sm font-medium text-gray-700 mb-1">Image</label>
-          <div class="upload-container" onclick="document.getElementById('fileInput-${blockId}').click()">
-            <i class="ri-image-line text-4xl text-primary mb-2"></i>
-            <p class="font-medium">Cliquer pour sélectionner une image</p>
-            <p class="text-sm text-gray-500 mt-1">JPG/PNG - Max 5MB</p>
-          </div>
-          <input type="file" id="fileInput-${blockId}" accept="image/*" hidden>
-          <img id="imagePreview-${blockId}" class="hidden mx-auto content-preview rounded-lg mt-4" alt="Aperçu de l'image">
+          <input type="hidden" role="uploadcare-uploader" id="uploadcare-${blockId}" data-public-key="${UPLOADCARE_PUB_KEY}" data-images-only="true" data-preview-step="true" />
+          <div id="imagePreviewContainer-${blockId}" class="mt-4"></div>
         </div>
       `;
-      const fileInput = document.getElementById(`fileInput-${blockId}`);
-      fileInput.addEventListener('change', async function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (file.size > 5 * 1024 * 1024) {
-          showNotification("Le fichier est trop volumineux (max 5MB)", "error");
-          return;
-        }
-        const imagePreview = document.getElementById(`imagePreview-${blockId}`);
-        imagePreview.src = URL.createObjectURL(file);
-        imagePreview.classList.remove('hidden');
-        const contentPreview = blockCard.querySelector('.block-content-preview');
-        contentPreview.innerHTML = `
-          <img src="${imagePreview.src}" alt="Image de la formation" class="content-preview">
-          <div class="block-actions">
-            <button type="button" class="edit-block-btn btn-edit-block">Modifier</button>
-          </div>
-        `;
-        contentPreview.classList.remove('hidden');
-        contentForm.classList.add('hidden');
-        if (isEditMode) {
-          saveEditBlockContent(blockId, {
-            type: 'image',
-            content: imagePreview.src
-          });
-        } else {
-          saveBlockContent(blockId, {
-            type: 'image',
-            content: imagePreview.src
-          });
-        }
-        const editBtn = contentPreview.querySelector('.edit-block-btn');
-        editBtn.addEventListener('click', function() {
-          contentPreview.classList.add('hidden');
-          contentForm.classList.remove('hidden');
+      
+      const uploadInput = document.getElementById(`uploadcare-${blockId}`);
+      if (uploadInput) {
+        const widget = uploadcare.Widget(uploadInput);
+        widget.onUploadComplete(function(fileInfo) {
+          if (fileInfo) {
+            const imageUrl = fileInfo.cdnUrl;
+            const contentPreview = blockCard.querySelector('.block-content-preview');
+            if (contentPreview) {
+              contentPreview.innerHTML = `
+                <img src="${imageUrl}" alt="Image de la formation" class="content-preview rounded-lg">
+                <div class="block-actions">
+                  <button type="button" class="edit-block-btn btn-edit-block">Modifier</button>
+                </div>
+              `;
+              contentPreview.classList.remove('hidden');
+              contentForm.classList.add('hidden');
+              
+              if (isEditMode) {
+                saveEditBlockContent(blockId, {
+                  type: 'image',
+                  content: imageUrl
+                });
+              } else {
+                saveBlockContent(blockId, {
+                  type: 'image',
+                  content: imageUrl
+                });
+              }
+              
+              const editBtn = contentPreview.querySelector('.edit-block-btn');
+              if (editBtn) {
+                editBtn.addEventListener('click', function() {
+                  contentPreview.classList.add('hidden');
+                  contentForm.classList.remove('hidden');
+                });
+              }
+            }
+          }
         });
-      });
+      }
     } else if (blockType === 'link') {
       contentForm.innerHTML = `
         <div class="mb-3">
@@ -1386,10 +1410,10 @@ function loadFormationForEdit(formationId) {
             if (textInput) textInput.value = block.content || '';
             break;
           case 'image':
-            const imagePreview = blockCard.querySelector('#imagePreview-' + blockCard.id.split('-')[1]);
-            if (imagePreview) {
-              imagePreview.src = block.content;
-              imagePreview.classList.remove('hidden');
+            const uploadInput = blockCard.querySelector(`#uploadcare-${blockCard.id.split('-')[1]}`);
+            if (uploadInput && block.content) {
+              const widget = uploadcare.Widget(uploadInput);
+              widget.value(block.content);
             }
             break;
           case 'link':
