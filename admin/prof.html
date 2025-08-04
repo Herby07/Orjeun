@@ -187,6 +187,84 @@ body {
   background-color: #dcfce7;
   border-left: 3px solid #22c55e;
 }
+/* Styles pour le menu responsive */
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #4b5563;
+}
+
+.mobile-menu {
+  position: fixed;
+  top: 0;
+  right: -300px;
+  width: 280px;
+  height: 100vh;
+  background-color: white;
+  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  transition: right 0.3s ease;
+  padding-top: 60px;
+  overflow-y: auto;
+}
+
+.mobile-menu.active {
+  right: 0;
+}
+
+.mobile-menu-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+}
+
+.mobile-menu-overlay.active {
+  display: block;
+}
+
+.mobile-menu-content {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.mobile-nav-link {
+  display: block;
+  padding: 12px 15px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+  color: #1f2937;
+}
+
+.mobile-nav-link:hover {
+  background-color: #f1f5f9;
+}
+
+.mobile-nav-link.active {
+  background-color: #10B981;
+  color: white;
+}
+
+.mobile-close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #4b5563;
+}
+
 @media (max-width: 768px) {
   .card-stat {
     margin-bottom: 1rem;
@@ -215,6 +293,26 @@ body {
   table {
     min-width: 600px;
   }
+  
+  /* Afficher le bouton menu sur mobile */
+  .mobile-menu-btn {
+    display: block;
+  }
+  
+  /* Cacher les liens de navigation sur mobile */
+  .desktop-nav-links {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-menu-btn {
+    display: none;
+  }
+  
+  .desktop-nav-links {
+    display: flex;
+  }
 }
 </style>
 </head>
@@ -223,20 +321,46 @@ body {
   <div class="loading-spinner"></div>
 </div>
 
+<!-- Menu mobile -->
+<div id="mobileMenuOverlay" class="mobile-menu-overlay"></div>
+<div id="mobileMenu" class="mobile-menu">
+  <button id="mobileMenuClose" class="mobile-close-btn">
+    <i class="ri-close-line"></i>
+  </button>
+  <div class="mobile-menu-content">
+    <a href="#" class="mobile-nav-link" data-page="creer">Créer</a>
+    <a href="#" class="mobile-nav-link active" data-page="stat">Statistiques</a>
+    <a href="#" class="mobile-nav-link" data-page="rapport">Rapport</a>
+    <a href="../dashboard" class="mobile-nav-link flex items-center mt-4">
+      <i class="ri-user-line ri-lg mr-2"></i>
+      <span>Partie Utilisateur</span>
+    </a>
+  </div>
+</div>
+
 <nav class="fixed top-0 left-0 w-full bg-white shadow-sm z-10">
   <div class="px-4 py-3 flex items-center justify-between">
     <div class="flex items-center">
       <span class="text-xl font-['Pacifico'] text-primary">Orjeun</span>
     </div>
-    <a href="../dashboard" class="ml-4 text-gray-600 hover:text-primary transition-colors flex items-center">
-                    <i class="ri-user-line ri-lg mr-1"></i>
-                    <span>Partie Utilisateur</span>
-    <div class="flex items-center space-x-6">
+    
+    <!-- Bouton menu mobile -->
+    <button id="mobileMenuBtn" class="mobile-menu-btn">
+      <i class="ri-menu-line"></i>
+    </button>
+    
+    <!-- Liens de navigation desktop -->
+    <div class="desktop-nav-links flex items-center space-x-6">
       <a href="#" class="nav-link" data-page="creer">Créer</a>
       <a href="#" class="nav-link active" data-page="stat">Statistiques</a>
       <a href="#" class="nav-link" data-page="rapport">Rapport</a>
     </div>
+    
     <div class="flex items-center space-x-2">
+      <a href="../dashboard" class="hidden md:flex text-gray-600 hover:text-primary transition-colors items-center">
+        <i class="ri-user-line ri-lg mr-1"></i>
+        <span class="hidden md:inline">Partie Utilisateur</span>
+      </a>
       <div class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100">
         <i class="ri-user-line text-gray-600"></i>
       </div>
@@ -443,7 +567,7 @@ document.addEventListener('DOMContentLoaded', function() {
   firebase.initializeApp(firebaseConfig);
   const database = firebase.database();
   
-  const userEmail = sessionStorage.getItem('userEmail');
+  const userEmail = localStorage.getItem('userEmail');
   
   if (!userEmail) {
     window.location.href = "login";
@@ -452,21 +576,44 @@ document.addEventListener('DOMContentLoaded', function() {
   
   document.getElementById('professor-email').textContent = userEmail;
   
-  const navLinks = document.querySelectorAll('.nav-link');
+  const navLinks = document.querySelectorAll('.nav-link, .mobile-nav-link');
   const pageSections = document.querySelectorAll('.page-section');
   
   navLinks.forEach(link => {
     link.addEventListener('click', function(e) {
       e.preventDefault();
       
+      // Mettre à jour l'état actif pour tous les liens
       navLinks.forEach(l => l.classList.remove('active'));
       this.classList.add('active');
       
+      // Masquer toutes les sections
       pageSections.forEach(section => section.classList.remove('active'));
       
+      // Afficher la section cible
       const targetPage = this.getAttribute('data-page');
       document.getElementById(`page-${targetPage}`).classList.add('active');
+      
+      // Fermer le menu mobile
+      document.getElementById('mobileMenu').classList.remove('active');
+      document.getElementById('mobileMenuOverlay').classList.remove('active');
     });
+  });
+  
+  // Gestion du menu mobile
+  document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+    document.getElementById('mobileMenu').classList.add('active');
+    document.getElementById('mobileMenuOverlay').classList.add('active');
+  });
+  
+  document.getElementById('mobileMenuClose').addEventListener('click', function() {
+    document.getElementById('mobileMenu').classList.remove('active');
+    document.getElementById('mobileMenuOverlay').classList.remove('active');
+  });
+  
+  document.getElementById('mobileMenuOverlay').addEventListener('click', function() {
+    document.getElementById('mobileMenu').classList.remove('active');
+    this.classList.remove('active');
   });
   
   document.getElementById('createFormationBtn').addEventListener('click', function() {
