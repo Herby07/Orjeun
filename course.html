@@ -7,7 +7,6 @@
   <script src="https://cdn.tailwindcss.com/3.4.1"></script>
   <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-database-compat.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -442,8 +441,6 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-    
     let currentBlockIndex = 0;
     let currentFormationId = null;
     let userData = null;
@@ -671,7 +668,7 @@
               <i class="ri-image-line content-type-icon"></i>
               <h3>Image</h3>
             </div>
-            <img src="${block.content}" alt="Image du cours" class="content-image">
+            <img src="${block.content}" alt="Image du cours" class="content-image" onerror="this.src='https://via.placeholder.com/600x400?text=Image+non+disponible'">
           `;
           break;
           
@@ -695,16 +692,11 @@
               <i class="ri-file-pdf-line content-type-icon"></i>
               <h3>Document PDF</h3>
             </div>
-            <div class="content-pdf" id="pdfViewer">
-              <div class="h-full flex items-center justify-center">
-                <div class="text-center">
-                  <i class="ri-file-pdf-line text-5xl text-primary mb-4"></i>
-                  <p class="text-lg font-medium">Chargement du document...</p>
-                </div>
-              </div>
-            </div>
+            <a href="${block.url}" target="_blank" class="content-link">
+              <i class="ri-download-line mr-2"></i>
+              Télécharger le PDF: ${block.name || 'Document'}
+            </a>
           `;
-          setTimeout(() => loadPdfFromUrl(block.url), 100);
           break;
           
         case 'quiz':
@@ -717,31 +709,33 @@
           const optionsContainer = document.getElementById('quizOptions');
           optionsContainer.innerHTML = '';
           
-          Object.entries(block.options).forEach(([key, value]) => {
-            let optionText = value;
-            if (typeof value === 'object' && value !== null) {
-              optionText = value.text || value.content || JSON.stringify(value);
-            }
-            
-            const optionDiv = document.createElement('div');
-            optionDiv.className = 'quiz-option';
-            optionDiv.dataset.value = key;
-            optionDiv.innerHTML = `
-              <div class="flex items-center">
-                <div class="w-6 h-6 flex items-center justify-center mr-3 border rounded-full">
-                  ${key}
+          if (block.options && Array.isArray(block.options)) {
+            block.options.forEach((option, index) => {
+              const optionText = option.text || option;
+              const optionKey = index;
+              
+              const optionDiv = document.createElement('div');
+              optionDiv.className = 'quiz-option';
+              optionDiv.dataset.index = optionKey;
+              optionDiv.innerHTML = `
+                <div class="flex items-center">
+                  <div class="w-6 h-6 flex items-center justify-center mr-3 border rounded-full">
+                    ${String.fromCharCode(65 + index)}
+                  </div>
+                  <span>${optionText}</span>
                 </div>
-                <span>${optionText}</span>
-              </div>
-            `;
-            
-            optionDiv.addEventListener('click', () => {
-              document.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected'));
-              optionDiv.classList.add('selected');
+              `;
+              
+              optionDiv.addEventListener('click', () => {
+                document.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected'));
+                optionDiv.classList.add('selected');
+              });
+              
+              optionsContainer.appendChild(optionDiv);
             });
-            
-            optionsContainer.appendChild(optionDiv);
-          });
+          } else {
+            optionsContainer.innerHTML = '<p class="text-red-500">Erreur: les options du quiz ne sont pas disponibles</p>';
+          }
           
           contentHTML = `
             <div class="text-center py-10">
@@ -767,52 +761,6 @@
       }
     }
     
-    async function loadPdfFromUrl(url) {
-      const pdfViewer = document.getElementById('pdfViewer');
-      
-      try {
-        const loadingTask = pdfjsLib.getDocument(url);
-        const pdfDocument = await loadingTask.promise;
-        const totalPages = pdfDocument.numPages;
-        const page = await pdfDocument.getPage(1);
-        const viewport = page.getViewport({ scale: 1.0 });
-        const containerWidth = pdfViewer.clientWidth;
-        const scale = containerWidth / viewport.width;
-        const scaledViewport = page.getViewport({ scale: scale });
-        
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        canvas.height = scaledViewport.height;
-        canvas.width = scaledViewport.width;
-        
-        const container = document.createElement('div');
-        container.className = 'canvas-container';
-        container.appendChild(canvas);
-        
-        pdfViewer.innerHTML = '';
-        pdfViewer.appendChild(container);
-        
-        const renderContext = {
-          canvasContext: context,
-          viewport: scaledViewport
-        };
-        
-        await page.render(renderContext).promise;
-        
-      } catch (error) {
-        console.error('Erreur de chargement du PDF:', error);
-        pdfViewer.innerHTML = `
-          <div class="h-full flex items-center justify-center text-center p-4">
-            <div>
-              <i class="ri-error-warning-line text-4xl text-danger mb-4"></i>
-              <h3 class="font-medium text-xl mb-2">Erreur de chargement du PDF</h3>
-              <p class="text-gray-600">${error.message || 'Veuillez réessayer plus tard'}</p>
-            </div>
-          </div>
-        `;
-      }
-    }
-    
     function handleQuizResponse(isCorrect) {
       userProgress.quizCompleted[currentBlockIndex] = isCorrect;
       
@@ -823,8 +771,10 @@
         nextBlock();
       } else {
         const quizOptions = document.querySelectorAll('.quiz-option');
-        quizOptions.forEach(opt => {
-          if (opt.dataset.value === currentQuiz.bonneReponse) {
+        quizOptions.forEach((opt, index) => {
+          if (currentQuiz.options && 
+              currentQuiz.options[index] && 
+              currentQuiz.options[index].correct) {
             opt.classList.add('correct');
           }
         });
@@ -928,18 +878,13 @@
           return;
         }
         
-        const userAnswer = selectedOption.dataset.value;
+        const selectedIndex = parseInt(selectedOption.dataset.index);
         let isCorrect = false;
         
-        if (currentQuiz && currentQuiz.options) {
-          const options = Object.values(currentQuiz.options);
-          for (const [key, option] of Object.entries(currentQuiz.options)) {
-            if (typeof option === 'object' && option.correct) {
-              if (key === userAnswer) {
-                isCorrect = true;
-                break;
-              }
-            }
+        if (currentQuiz && Array.isArray(currentQuiz.options)) {
+          if (currentQuiz.options[selectedIndex] && 
+              currentQuiz.options[selectedIndex].correct) {
+            isCorrect = true;
           }
         }
         
@@ -949,10 +894,10 @@
           selectedOption.classList.add('incorrect');
           
           const quizOptions = document.querySelectorAll('.quiz-option');
-          quizOptions.forEach(opt => {
-            const key = opt.dataset.value;
-            const option = currentQuiz.options[key];
-            if (typeof option === 'object' && option.correct) {
+          quizOptions.forEach((opt, index) => {
+            if (currentQuiz.options && 
+                currentQuiz.options[index] && 
+                currentQuiz.options[index].correct) {
               opt.classList.add('correct');
             }
           });
