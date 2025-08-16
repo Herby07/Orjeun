@@ -42,6 +42,31 @@
     .auth-card { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
     .active-tab { color: #4F46E5 !important; }
     .inactive-tab { color: #6B7280 !important; }
+    .hidden-field {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .visible-field {
+      max-height: 500px;
+      opacity: 1;
+      transition: all 0.3s ease;
+    }
+    .password-container {
+      position: relative;
+    }
+    .password-toggle {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #6b7280;
+      background: none;
+      border: none;
+      outline: none;
+    }
   </style>
 </head>
 <body class="bg-white min-h-screen flex flex-col">
@@ -65,9 +90,14 @@
             <label for="login-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input type="email" id="login-email" class="w-full h-10 pl-3 border border-gray-300 rounded-button focus:ring-2 focus:ring-primary focus:border-primary" required>
           </div>
-          <div>
+          <div class="password-container">
             <label for="login-password" class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
-            <input type="password" id="login-password" class="w-full h-10 pl-3 border border-gray-300 rounded-button focus:ring-2 focus:ring-primary focus:border-primary" required>
+            <div class="relative">
+              <input type="password" id="login-password" class="w-full h-10 pl-3 pr-10 border border-gray-300 rounded-button focus:ring-2 focus:ring-primary focus:border-primary" required>
+              <button type="button" class="password-toggle" onclick="togglePasswordVisibility('login-password', 'login-eye-icon')">
+                <i id="login-eye-icon" class="ri-eye-off-line"></i>
+              </button>
+            </div>
           </div>
           <div class="flex items-center justify-between">
             <label class="flex items-center text-sm text-gray-700">
@@ -86,13 +116,71 @@
             <label for="signup-name" class="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
             <input type="text" id="signup-name" class="w-full h-10 pl-3 border border-gray-300 rounded-button focus:ring-2 focus:ring-primary focus:border-primary" required>
           </div>
+          
+          <!-- Nouveaux champs ajoutés -->
+          <div>
+            <label for="telephone" class="block text-sm font-medium text-gray-700 mb-1">Numéro de téléphone</label>
+            <div class="relative">
+              <input type="tel" id="telephone" name="telephone" required 
+                     class="w-full px-4 pl-10 py-2 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                     placeholder="exemple: +50944358909"
+                     pattern="[0-9]{10}" 
+                     title="Entrez un numéro de téléphone à 10 chiffres">
+              <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <i class="ri-phone-line ri-lg text-gray-500"></i>
+              </div>
+            </div>                   
+          </div>
+          
+          <div>
+            <label for="departement" class="block text-sm font-medium text-gray-700 mb-1">Département</label>
+            <div class="relative">
+              <select id="departement" name="departement" required 
+                      class="w-full px-4 py-2 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none">
+                <option value="" disabled selected>Chargement...</option>
+              </select>
+              <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <i class="ri-arrow-down-s-line ri-lg text-gray-500"></i>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label for="commune" class="block text-sm font-medium text-gray-700 mb-1">Commune</label>
+            <div class="relative">
+              <select id="commune" name="commune" required 
+                      class="w-full px-4 py-2 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none">
+                <option value="" disabled selected>Sélectionnez d'abord un département</option>
+              </select>
+              <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <i class="ri-arrow-down-s-line ri-lg text-gray-500"></i>
+              </div>
+            </div>
+          </div>
+
+          <div id="nouvelleCommuneField" class="hidden-field">
+            <div class="form-group mb-4">
+              <label for="nouvelleCommune" class="block text-sm font-medium text-gray-700 mb-1">Nom de votre commune</label>
+              <input type="text" id="nouvelleCommune" name="nouvelleCommune" 
+                     class="w-full px-4 py-2 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                     pattern="[A-Za-zÀ-ÿ\s\-']{2,}" 
+                     title="Le nom de la commune doit contenir au moins 2 caractères">
+            </div>
+          </div>
+          <!-- Fin des nouveaux champs -->
+          
           <div>
             <label for="signup-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input type="email" id="signup-email" class="w-full h-10 pl-3 border border-gray-300 rounded-button focus:ring-2 focus:ring-primary focus:border-primary" required>
           </div>
-          <div>
+          <div class="password-container">
             <label for="signup-password" class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
-            <input type="password" id="signup-password" class="w-full h-10 pl-3 border border-gray-300 rounded-button focus:ring-2 focus:ring-primary focus:border-primary" required>
+            <div class="relative">
+              <input type="password" id="signup-password" class="w-full h-10 pl-3 pr-10 border border-gray-300 rounded-button focus:ring-2 focus:ring-primary focus:border-primary" required>
+              <button type="button" class="password-toggle" onclick="togglePasswordVisibility('signup-password', 'signup-eye-icon')">
+                <i id="signup-eye-icon" class="ri-eye-off-line"></i>
+              </button>
+            </div>
             <div class="mt-2">
               <div class="flex justify-between text-xs text-gray-500">
                 <span>Force du mot de passe:</span>
@@ -151,6 +239,29 @@
   const loginSuccess = document.getElementById('login-success');
   const signupError = document.getElementById('signup-error');
   const signupSuccess = document.getElementById('signup-success');
+
+  // Nouveaux éléments ajoutés
+  const departementSelect = document.getElementById('departement');
+  const communeSelect = document.getElementById('commune');
+  const nouvelleCommuneField = document.getElementById('nouvelleCommuneField');
+  const nouvelleCommuneInput = document.getElementById('nouvelleCommune');
+  const telephoneInput = document.getElementById('telephone');
+
+  // Fonction pour basculer la visibilité du mot de passe
+  function togglePasswordVisibility(inputId, iconId) {
+    const passwordInput = document.getElementById(inputId);
+    const eyeIcon = document.getElementById(iconId);
+    
+    if (passwordInput.type === 'password') {
+      passwordInput.type = 'text';
+      eyeIcon.classList.remove('ri-eye-off-line');
+      eyeIcon.classList.add('ri-eye-line');
+    } else {
+      passwordInput.type = 'password';
+      eyeIcon.classList.remove('ri-eye-line');
+      eyeIcon.classList.add('ri-eye-off-line');
+    }
+  }
 
   function switchTab(tab) {
     if (tab === 'login') {
@@ -236,12 +347,6 @@
               loginError.classList.add('hidden');
               setTimeout(() => window.location.href = 'dashboard', 1000);
             }
-           
-            
-            localStorage.setItem('userName', name);
-            localStorage.setItem('userEmail', email);
-            localStorage.setItem('userPassword', password);
-         
           });
           if (!found) throw new Error('Mot de passe incorrect');
         } else {
@@ -256,11 +361,90 @@
       });
   });
 
-  signupFormElement.addEventListener('submit', function (e) {
+  // Fonction pour charger les départements
+  async function chargerDepartements() {
+    try {
+      const snapshot = await db.ref('region_nationale').once('value');
+      departementSelect.innerHTML = '<option value="" disabled selected>Sélectionnez un département</option>';
+      
+      snapshot.forEach(departmentSnapshot => {
+        const option = document.createElement('option');
+        option.value = departmentSnapshot.key;
+        option.textContent = departmentSnapshot.key;
+        departementSelect.appendChild(option);
+      });
+    } catch (error) {
+      console.error('Erreur lors du chargement des départements:', error);
+      departementSelect.innerHTML = '<option value="" disabled selected>Erreur de chargement</option>';
+    }
+  }
+
+  // Fonction pour charger les communes
+  async function chargerCommunes(departement) {
+    try {
+      const snapshot = await db.ref(`region_nationale/${departement}`).once('value');
+      communeSelect.innerHTML = '<option value="" disabled selected>Sélectionnez une commune</option>';
+      
+      snapshot.forEach(communeSnapshot => {
+        if(communeSnapshot.key && communeSnapshot.key.trim() !== '') {
+          const option = document.createElement('option');
+          option.value = communeSnapshot.key;
+          option.textContent = communeSnapshot.key;
+          communeSelect.appendChild(option);
+        }
+      });
+      
+      const autreOption = document.createElement('option');
+      autreOption.value = 'autre';
+      autreOption.textContent = 'Ma commune n\'est pas dans la liste';
+      communeSelect.appendChild(autreOption);
+    } catch (error) {
+      console.error('Erreur lors du chargement des communes:', error);
+      communeSelect.innerHTML = '<option value="" disabled selected>Erreur de chargement</option>';
+    }
+  }
+
+  // Événements pour les nouveaux champs
+  departementSelect.addEventListener('change', async function() {
+    if(this.value) {
+      await chargerCommunes(this.value);
+    }
+  });
+
+  communeSelect.addEventListener('change', function() {
+    const showCommuneField = this.value === 'autre';
+    nouvelleCommuneField.classList.toggle('visible-field', showCommuneField);
+    nouvelleCommuneField.classList.toggle('hidden-field', !showCommuneField);
+    nouvelleCommuneInput.toggleAttribute('required', showCommuneField);
+    if(showCommuneField) nouvelleCommuneInput.focus();
+  });
+
+  telephoneInput.addEventListener('input', function() {
+    const value = this.value.replace(/\D/g, '');
+    this.value = value;
+    
+    if(value.length === 10) {
+      this.classList.remove('border-red-500');
+      this.classList.add('border-green-500');
+      setTimeout(() => {
+        this.classList.remove('border-green-500');
+        this.classList.add('border-gray-300');
+      }, 1000);
+    } else if(value.length > 0) {
+      this.classList.remove('border-gray-300');
+      this.classList.add('border-red-500');
+    } else {
+      this.classList.remove('border-red-500', 'border-green-500');
+      this.classList.add('border-gray-300');
+    }
+  });
+
+  signupFormElement.addEventListener('submit', async function (e) {
     e.preventDefault();
     const name = document.getElementById('signup-name').value;
     const email = document.getElementById('signup-email').value;
     const password = document.getElementById('signup-password').value;
+    const telephone = telephoneInput.value;
 
     if (password.length < 6) {
       signupError.textContent = 'Le mot de passe doit contenir au moins 6 caractères';
@@ -269,48 +453,98 @@
       return;
     }
 
-    showLoading();
-    db.ref('membres').orderByChild('email').equalTo(email).once('value')
-      .then(snapshot => {
-        if (snapshot.exists()) {
-          hideLoading();
-          throw new Error('Cet email est déjà utilisé');
-        } else {
-          const newUser  = db.ref('membres').push();
-          return newUser .set({
-            nom: name,
-            email: email,
-            password: password,
-            dateInscription: firebase.database.ServerValue.TIMESTAMP
-          }).then(() => {
-            // Enregistrer dans le local storage
-            localStorage.setItem('userName', name);
-            localStorage.setItem('userEmail', email);
-            localStorage.setItem('userPassword', password);
-          });
+    try {
+      showLoading();
+      
+      // Validation du téléphone
+      if (telephone.length !== 10) {
+        throw new Error('Veuillez entrer un numéro de téléphone valide (10 chiffres)');
+      }
+
+      // Vérification de l'unicité de l'email
+      const emailCheck = await db.ref('membres').orderByChild('email').equalTo(email).once('value');
+      if (emailCheck.exists()) {
+        throw new Error('Cet email est déjà utilisé');
+      }
+
+      // Vérification de l'unicité du téléphone
+      const telCheck = await db.ref('membres').orderByChild('telephone').equalTo(telephone).once('value');
+      if (telCheck.exists()) {
+        throw new Error('Ce numéro de téléphone est déjà utilisé');
+      }
+
+      // Vérification des champs département et commune
+      const departement = departementSelect.value;
+      if (!departement) {
+        throw new Error('Veuillez sélectionner un département');
+      }
+      
+      let commune = communeSelect.value;
+      if (!commune) {
+        throw new Error('Veuillez sélectionner une commune');
+      }
+
+      // Gestion de la nouvelle commune
+      if (commune === 'autre') {
+        commune = nouvelleCommuneInput.value.trim();
+        if (!commune) {
+          throw new Error('Veuillez entrer le nom de votre commune');
         }
-      })
-      .then(() => {
-        hideLoading();
-        signupSuccess.textContent = 'Inscription réussie!';
-        signupSuccess.classList.remove('hidden');
-        signupSuccess.classList.add('animate-slideFade');
-        signupError.classList.add('hidden');
-        document.getElementById('signup-name').value = '';
-        document.getElementById('signup-email').value = '';
-        document.getElementById('signup-password').value = '';
-        passwordStrengthIndicator.style.width = '33%';
-        passwordStrengthIndicator.className = 'password-strength h-full bg-red-500 rounded-full';
-        passwordStrengthText.textContent = 'Faible';
-        setTimeout(() => switchTab('login'), 2000);
-      })
-      .catch(error => {
-        hideLoading();
-        signupError.textContent = error.message;
-        signupError.classList.remove('hidden');
-        signupError.classList.add('animate-slideFade');
-        signupSuccess.classList.add('hidden');
+        
+        // Ajouter la nouvelle commune dans la base de données
+        await db.ref(`region_nationale/${departement}/${commune}`).set(true);
+      }
+
+      // Création de l'utilisateur
+      const newUserRef = db.ref('membres').push();
+      await newUserRef.set({
+        nom: name,
+        email: email,
+        password: password,
+        telephone: telephone,
+        departement: departement,
+        commune: commune,
+        dateInscription: firebase.database.ServerValue.TIMESTAMP
       });
+
+      // Enregistrer dans le local storage
+      localStorage.setItem('userName', name);
+      localStorage.setItem('userEmail', email);
+      localStorage.setItem('userPassword', password);
+      localStorage.setItem('userTelephone', telephone);
+      localStorage.setItem('userDepartement', departement);
+      localStorage.setItem('userCommune', commune);
+
+      // Succès
+      hideLoading();
+      signupSuccess.textContent = 'Inscription réussie!';
+      signupSuccess.classList.remove('hidden');
+      signupSuccess.classList.add('animate-slideFade');
+      signupError.classList.add('hidden');
+      
+      // Réinitialiser le formulaire
+      document.getElementById('signup-name').value = '';
+      document.getElementById('signup-email').value = '';
+      document.getElementById('signup-password').value = '';
+      telephoneInput.value = '';
+      departementSelect.value = '';
+      communeSelect.value = '';
+      nouvelleCommuneInput.value = '';
+      nouvelleCommuneField.classList.remove('visible-field');
+      nouvelleCommuneField.classList.add('hidden-field');
+      
+      passwordStrengthIndicator.style.width = '33%';
+      passwordStrengthIndicator.className = 'password-strength h-full bg-red-500 rounded-full';
+      passwordStrengthText.textContent = 'Faible';
+      
+      setTimeout(() => switchTab('login'), 2000);
+    } catch (error) {
+      hideLoading();
+      signupError.textContent = error.message;
+      signupError.classList.remove('hidden');
+      signupError.classList.add('animate-slideFade');
+      signupSuccess.classList.add('hidden');
+    }
   });
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -318,6 +552,9 @@
     if (userId) {
       window.location.href = 'dashboard';
     }
+    
+    // Charger les départements au démarrage
+    chargerDepartements();
   });
 </script>
 </body>
