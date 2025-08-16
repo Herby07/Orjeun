@@ -328,6 +328,28 @@ body {
   color: #10b981;
   margin-right: 8px;
 }
+.student-phone {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+.student-status {
+  font-size: 0.875rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background-color: #e5e7eb;
+}
+.student-status.finished {
+  background-color: #dcfce7;
+  color: #166534;
+}
+.student-status.in-progress {
+  background-color: #fffbeb;
+  color: #854d0e;
+}
+.student-details {
+  flex-grow: 1;
+}
 </style>
 </head>
 <body class="min-h-screen pt-16 pb-24">
@@ -446,7 +468,7 @@ body {
       <div id="presenceSummary" class="presence-summary hidden">
         <h4 class="flex items-center">
           <i class="ri-user-check-line mr-2 text-green-600"></i>
-          Élèves présents
+          Élèves participants
         </h4>
         <div id="presenceList" class="presence-list">
         </div>
@@ -650,6 +672,24 @@ document.addEventListener('DOMContentLoaded', function() {
       const card = document.createElement('div');
       card.className = 'formation-card bg-white border border-gray-200 rounded-lg overflow-hidden cursor-pointer hover:border-primary';
       card.dataset.id = formation.id;
+      let buttonsHtml = `
+        <button class="w-full mt-4 bg-tertiary hover:bg-tertiary/90 text-white font-medium py-2 px-4 rounded-button transition-colors">
+          <span class="flex items-center justify-center">
+            <i class="ri-file-chart-line mr-2"></i>
+            Générer rapport
+          </span>
+        </button>
+      `;
+      if (!isOnline) {
+        buttonsHtml += `
+          <button class="w-full mt-2 btn-presence font-medium py-2 px-4 rounded-button">
+            <span class="flex items-center justify-center">
+              <i class="ri-user-check-line mr-2"></i>
+              Gérer la présence
+            </span>
+          </button>
+        `;
+      }
       card.innerHTML = `
         <div class="p-5">
           <div class="flex justify-between items-start mb-3">
@@ -686,18 +726,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
           `}
           <p class="text-sm text-gray-600 line-clamp-2">${formation.description || 'Aucune description disponible'}</p>
-          <button class="w-full mt-4 bg-tertiary hover:bg-tertiary/90 text-white font-medium py-2 px-4 rounded-button transition-colors">
-            <span class="flex items-center justify-center">
-              <i class="ri-file-chart-line mr-2"></i>
-              Générer rapport
-            </span>
-          </button>
-          <button class="w-full mt-2 btn-presence font-medium py-2 px-4 rounded-button">
-            <span class="flex items-center justify-center">
-              <i class="ri-user-check-line mr-2"></i>
-              Gérer la présence
-            </span>
-          </button>
+          ${buttonsHtml}
         </div>
       `;
       formationsList.appendChild(card);
@@ -705,10 +734,12 @@ document.addEventListener('DOMContentLoaded', function() {
         e.stopPropagation();
         selectFormation(formation);
       });
-      card.querySelector('button.btn-presence').addEventListener('click', function(e) {
-        e.stopPropagation();
-        openPresenceModal(formation);
-      });
+      if (!isOnline) {
+        card.querySelector('button.btn-presence').addEventListener('click', function(e) {
+          e.stopPropagation();
+          openPresenceModal(formation);
+        });
+      }
       card.addEventListener('click', function() {
         selectFormation(formation);
       });
@@ -722,7 +753,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('formationProfessor').textContent = formation.prof;
     const now = new Date();
     document.getElementById('reportDate').textContent = now.toLocaleDateString('fr-FR') + ' à ' + now.toLocaleTimeString('fr-FR');
-    await loadPresencesForFormation(formation.id);
+    if (formation.type === "professional") {
+      await loadPresencesForFormation(formation.id);
+    } else {
+      await loadOnlineParticipants(formation.id, formation.titre);
+    }
     document.getElementById('reportForm').classList.remove('hidden');
     document.getElementById('reportForm').scrollIntoView({ behavior: 'smooth' });
   }
@@ -740,18 +775,75 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       presenceSummary.classList.remove('hidden');
       for (const studentId in presences) {
-        const studentName = presences[studentId];
+        const student = presences[studentId];
         const presenceItem = document.createElement('div');
         presenceItem.className = 'presence-list-item';
         presenceItem.innerHTML = `
-          <i class="ri-user-line"></i>
-          <span>${studentName}</span>
+          <div class="flex justify-between w-full">
+            <div>
+              <span class="font-medium">${student.nom}</span>
+              <div class="student-phone">${student.telephone}</div>
+            </div>
+          </div>
         `;
         presenceList.appendChild(presenceItem);
       }
     } catch (error) {
       console.error("Erreur lors du chargement des présences:", error);
     }
+  }
+  async function loadOnlineParticipants(formationId, formationTitle) {
+    try {
+      const membersRef = database.ref('membres');
+      const membersSnapshot = await membersRef.once('value');
+      const members = membersSnapshot.val();
+      const participants = [];
+      for (const key in members) {
+        const member = members[key];
+        if (member.cours && member.cours[formationTitle]) {
+          const isFinished = member.cours_finished && member.cours_finished[formationTitle];
+          participants.push({
+            id: key,
+            nom: member.nom,
+            telephone: member.telephone || 'Non renseigné',
+            finished: isFinished
+          });
+        }
+      }
+      displayOnlineParticipants(participants);
+    } catch (error) {
+      console.error("Erreur lors du chargement des participants en ligne:", error);
+    }
+  }
+  function displayOnlineParticipants(participants) {
+    const presenceList = document.getElementById('presenceList');
+    const presenceSummary = document.getElementById('presenceSummary');
+    presenceList.innerHTML = '';
+    if (participants.length === 0) {
+      presenceSummary.classList.add('hidden');
+      return;
+    }
+    presenceSummary.classList.remove('hidden');
+    presenceSummary.querySelector('h4').innerHTML = `
+      <i class="ri-user-check-line mr-2 text-green-600"></i>
+      Participants à la formation en ligne
+    `;
+    participants.forEach(participant => {
+      const presenceItem = document.createElement('div');
+      presenceItem.className = 'presence-list-item';
+      presenceItem.innerHTML = `
+        <div class="flex justify-between w-full items-center">
+          <div class="student-details">
+            <span class="font-medium">${participant.nom}</span>
+            <div class="student-phone">${participant.telephone}</div>
+          </div>
+          <span class="student-status ${participant.finished ? 'finished' : 'in-progress'}">
+            ${participant.finished ? 'Terminé' : 'En cours'}
+          </span>
+        </div>
+      `;
+      presenceList.appendChild(presenceItem);
+    });
   }
   document.getElementById('cancelReport').addEventListener('click', function() {
     document.getElementById('reportForm').classList.add('hidden');
@@ -765,9 +857,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     document.getElementById('loadingOverlay').style.display = 'flex';
     try {
-      const presenceRef = database.ref(`Formation/${selectedFormation.id}/Presence`);
-      const presenceSnapshot = await presenceRef.once('value');
-      const presences = presenceSnapshot.val() || {};
+      let presenceData = {};
+      if (selectedFormation.type === "professional") {
+        const presenceRef = database.ref(`Formation/${selectedFormation.id}/Presence`);
+        const presenceSnapshot = await presenceRef.once('value');
+        presenceData = presenceSnapshot.val() || {};
+      } else {
+        // Pour les formations en ligne, on récupère les participants automatiquement
+        const participants = await loadOnlineParticipants(selectedFormation.id, selectedFormation.titre);
+        participants.forEach(participant => {
+          presenceData[participant.id] = {
+            nom: participant.nom,
+            telephone: participant.telephone
+          };
+        });
+      }
       const reportData = {
         professeur: professorName,
         email: userEmail,
@@ -777,7 +881,7 @@ document.addEventListener('DOMContentLoaded', function() {
         contenu: reportContent,
         date: new Date().toISOString(),
         typeFormation: selectedFormation.type,
-        presences: presences
+        presences: presenceData
       };
       const newReportRef = database.ref('rapports').push();
       await newReportRef.set(reportData);
@@ -816,7 +920,8 @@ document.addEventListener('DOMContentLoaded', function() {
           allStudents.push({
             id: key,
             nom: student.nom,            
-            email: student.email || ''
+            email: student.email || '',
+            telephone: student.telephone || 'Non renseigné'
           });
         }
       }
@@ -861,7 +966,10 @@ document.addEventListener('DOMContentLoaded', function() {
       studentItem.className = 'student-item';
       studentItem.innerHTML = `
         <input type="checkbox" id="student-${studentId}" ${isPresent ? 'checked' : ''}>
-        <label for="student-${studentId}" class="student-name">${fullName}</label>
+        <div class="flex flex-col">
+          <label for="student-${studentId}" class="student-name">${fullName}</label>
+          <span class="text-xs text-gray-500">${student.telephone}</span>
+        </div>
       `;
       studentList.appendChild(studentItem);
       const checkbox = studentItem.querySelector('input');
@@ -907,7 +1015,10 @@ document.addEventListener('DOMContentLoaded', function() {
       selectedStudents.forEach(studentId => {
         const student = allStudents.find(s => s.id === studentId);
         if (student) {
-          presenceData[studentId] = student.nom;
+          presenceData[studentId] = {
+            nom: student.nom,
+            telephone: student.telephone || 'Non renseigné'
+          };
         }
       });
       await database.ref(`Formation/${formationId}/Presence`).set(presenceData);
