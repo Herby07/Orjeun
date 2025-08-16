@@ -127,17 +127,6 @@
             color: #10B981;
             margin-bottom: 0.5rem;
         }
-        .product-meta {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #64748B;
-            font-size: 0.875rem;
-            margin-bottom: 1rem;
-        }
-        .product-meta i {
-            color: #94a3b8;
-        }
         .contact-btn {
             display: block;
             width: 100%;
@@ -198,28 +187,6 @@
         .search-container {
             position: relative;
             margin-bottom: 1.5rem;
-        }
-        .filter-bar {
-            display: flex;
-            gap: 0.75rem;
-            overflow-x: auto;
-            padding-bottom: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .filter-tag {
-            padding: 0.5rem 1rem;
-            border-radius: 9999px;
-            background-color: #e2e8f0;
-            color: #334155;
-            font-size: 0.875rem;
-            font-weight: 500;
-            white-space: nowrap;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .filter-tag.active {
-            background-color: #10B981;
-            color: white;
         }
         .sort-container {
             display: flex;
@@ -373,20 +340,6 @@
         .modal-body {
             padding: 1.5rem;
         }
-        .seller-group {
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .seller-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-        .seller-name {
-            font-weight: 600;
-            margin-left: 0.75rem;
-        }
         .cart-item {
             display: flex;
             align-items: center;
@@ -439,14 +392,6 @@
             margin-left: 1rem;
             color: #EF4444;
             cursor: pointer;
-        }
-        .seller-total {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #f1f5f9;
-            font-weight: 600;
         }
         .modal-footer {
             padding: 1.5rem;
@@ -531,6 +476,74 @@
             justify-content: center;
             z-index: 2000;
         }
+        .location-section {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .location-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .location-name {
+            font-weight: 600;
+            margin-left: 0.75rem;
+        }
+        .hidden-field {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .visible-field {
+            max-height: 500px;
+            opacity: 1;
+            transition: all 0.3s ease;
+        }
+        .category-tag {
+            display: inline-flex;
+            align-items: center;
+            background-color: #e0e7ff;
+            color: #4f46e5;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
+        .filter-buttons {
+            display: flex;
+            overflow-x: auto;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+            margin-bottom: 1rem;
+        }
+        .filter-button {
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            background-color: #f1f5f9;
+            color: #334155;
+            font-size: 0.875rem;
+            font-weight: 500;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-button.active {
+            background-color: #10B981;
+            color: white;
+        }
+        .product-category {
+            font-size: 0.875rem;
+            color: #4f46e5;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+        .product-category i {
+            margin-right: 0.25rem;
+        }
     </style>
 </head>
 <body class="bg-background">
@@ -552,9 +565,53 @@
                 </button>
             </div>
             <div id="cart-body" class="modal-body">
-         
+                <!-- Panier sera rendu ici -->
             </div>
             <div class="modal-footer">
+                <!-- Nouvelle section pour la localisation -->
+                <div class="location-section">
+                    <div class="location-header">
+                        <i class="ri-map-pin-line ri-lg text-primary"></i>
+                        <span class="location-name">Localisation de la commande</span>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="commande-departement" class="block text-sm font-medium text-gray-700 mb-1">Département</label>
+                        <div class="relative">
+                            <select id="commande-departement" name="commande-departement" required 
+                                    class="vendeur-select">
+                                <option value="" disabled selected>Chargement...</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                                <i class="ri-arrow-down-s-line ri-lg text-gray-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="commande-commune" class="block text-sm font-medium text-gray-700 mb-1">Commune</label>
+                        <div class="relative">
+                            <select id="commande-commune" name="commande-commune" required 
+                                    class="vendeur-select">
+                                <option value="" disabled selected>Sélectionnez d'abord un département</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                                <i class="ri-arrow-down-s-line ri-lg text-gray-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="commande-nouvelle-commune" class="hidden-field mb-4">
+                        <div class="form-group">
+                            <label for="nouvelle-commune" class="block text-sm font-medium text-gray-700 mb-1">Nom de votre commune</label>
+                            <input type="text" id="nouvelle-commune" name="nouvelle-commune" 
+                                   class="address-input"
+                                   pattern="[A-Za-zÀ-ÿ\s\-']{2,}" 
+                                   title="Le nom de la commune doit contenir au moins 2 caractères">
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="mb-4">
                     <label for="delivery-address" class="block text-sm font-medium text-gray-700 mb-1">Adresse de livraison</label>
                     <input 
@@ -617,12 +674,11 @@
                             class="search-input"
                         >
                     </div>
-
-                  
-                    <div id="filter-buttons" class="filter-bar no-scrollbar">
                     
+                    <!-- Barre de filtres par catégorie -->
+                    <div id="category-buttons" class="filter-buttons no-scrollbar">
+                        <!-- Les boutons de catégorie seront générés ici -->
                     </div>
-
       
                     <div class="sort-container">
                         <span id="products-count" class="results-count">0 produits trouvés</span>
@@ -706,7 +762,6 @@
 
         document.addEventListener('DOMContentLoaded', function() {
           
-            const filterButtonsContainer = document.getElementById('filter-buttons');
             const productGrid = document.getElementById('product-grid');
             const searchInput = document.getElementById('search-input');
             const sortSelect = document.getElementById('sort-select');
@@ -724,18 +779,25 @@
             const userIcon = document.getElementById('user-icon');
             const deliveryAddress = document.getElementById('delivery-address');
             const loadingOverlay = document.getElementById('loading-overlay');
-
+            const commandeDepartement = document.getElementById('commande-departement');
+            const commandeCommune = document.getElementById('commande-commune');
+            const nouvelleCommuneField = document.getElementById('commande-nouvelle-commune');
+            const nouvelleCommuneInput = document.getElementById('nouvelle-commune');
+            const categoryButtons = document.getElementById('category-buttons');
             
+            // Variables pour les catégories
+            let categories = [];
+            let activeCategory = 'Tous';
+            
+            // Variables pour les produits
             let allProducts = [];
             let filteredProducts = [];
-            let activeLocation = 'Tous';
             let searchTerm = '';
             let currentSort = 'default';
             let cart = [];
             let currentUser = null;
-            let departmentManagers = {};
+            let allManagers = [];
             let productsIndex = {}; 
-            let locationsMap = {}; 
 
             
             function showToast(message, duration = 3000) {
@@ -774,18 +836,16 @@
             }
 
          
-            async function loadDepartmentManagers() {
+            async function loadAllManagers() {
                 try {
                     const snapshot = await database.ref('confirmed_adm_member').once('value');
+                    allManagers = [];
                     if (snapshot.exists()) {
                         const admins = snapshot.val();
                         Object.keys(admins).forEach(key => {
                             const admin = admins[key];
-                            if (admin.role === "responsable" && admin.type === "departemental") {
-                                if (!departmentManagers[admin.departement]) {
-                                    departmentManagers[admin.departement] = [];
-                                }
-                                departmentManagers[admin.departement].push({
+                            if (admin.role === "responsable") {
+                                allManagers.push({
                                     id: key,
                                     ...admin
                                 });
@@ -797,13 +857,32 @@
                 }
             }
 
-         
-            function findDepartmentManager(department) {
-                if (departmentManagers[department] && departmentManagers[department].length > 0) {
-               
-                    return departmentManagers[department][0];
+           
+            function findResponsible(department, commune) {
+                // 1. Recherche d'un responsable communal
+                let responsible = allManagers.find(manager => 
+                    manager.type === "communal" && 
+                    manager.commune && 
+                    manager.commune.toLowerCase() === commune.toLowerCase()
+                );
+
+                // 2. Si non trouvé, cherche départemental
+                if (!responsible) {
+                    responsible = allManagers.find(manager => 
+                        manager.type === "departemental" && 
+                        manager.departement && 
+                        manager.departement.toLowerCase() === department.toLowerCase()
+                    );
                 }
-                return null;
+
+                // 3. Si toujours pas trouvé, cherche national
+                if (!responsible) {
+                    responsible = allManagers.find(manager => 
+                        manager.type === "national"
+                    );
+                }
+
+                return responsible;
             }
 
            
@@ -812,7 +891,6 @@
                 cartIcon.addEventListener('click', () => {
                     renderCart();
                     cartModal.classList.add('active');
-                    console.log('Panier ouvert');
                 });
                 
                 closeCart.addEventListener('click', () => {
@@ -820,6 +898,21 @@
                 });
                 
                 checkoutBtn.addEventListener('click', checkout);
+                
+                // Écouteurs pour les champs de localisation
+                commandeDepartement.addEventListener('change', async function() {
+                    if(this.value) {
+                        await chargerCommunesCommande(this.value);
+                    }
+                });
+
+                commandeCommune.addEventListener('change', function() {
+                    const showCommuneField = this.value === 'autre';
+                    nouvelleCommuneField.classList.toggle('visible-field', showCommuneField);
+                    nouvelleCommuneField.classList.toggle('hidden-field', !showCommuneField);
+                    nouvelleCommuneInput.toggleAttribute('required', showCommuneField);
+                    if(showCommuneField) nouvelleCommuneInput.focus();
+                });
             }
 
             
@@ -844,8 +937,7 @@
                         name: product.name,
                         price: product.price,
                         quantity: 1,
-                        imageUrl: product.imageUrl,
-                        location: product.location
+                        imageUrl: product.imageUrl
                     });
                 }
                 
@@ -877,99 +969,35 @@
             }
 
            
-            function normalizeLocationName(location) {
-                return location
-                    .toLowerCase()
-                    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
-                    .replace(/[^a-z0-9\s]/g, '') 
-                    .trim();
-            }
-
-     
-            function getFullLocationName(normalized) {               
-                let bestMatch = '';
-                for (const location in locationsMap) {
-                    const normalizedLocation = normalizeLocationName(location);
-                    if (normalizedLocation.includes(normalized) || normalized.includes(normalizedLocation)) {                   
-                        if (location.length > bestMatch.length) {
-                            bestMatch = location;
-                        }
-                    }
-                }
-                return bestMatch || normalized;
-            }
-
-           
             function renderCart() {
-             
-                const locations = {};
+                let html = '';
                 let total = 0;
                 
-                cart.forEach(item => {                 
-                    const normalizedLocation = normalizeLocationName(item.location);
-                    const fullLocation = getFullLocationName(normalizedLocation);
-                    
-                    if (!locations[fullLocation]) {
-                        locations[fullLocation] = {
-                            items: [],
-                            subtotal: 0
-                        };
-                    }
-                    
+                cart.forEach(item => {
                     const itemTotal = item.price * item.quantity;
-                    locations[fullLocation].items.push({...item, total: itemTotal});
-                    locations[fullLocation].subtotal += itemTotal;
                     total += itemTotal;
-                });
-                
-               
-                let html = '';
-                
-                Object.keys(locations).forEach(location => {
-                    const locData = locations[location];
                     
                     html += `
-                        <div class="seller-group">
-                            <div class="seller-header">
-                                <i class="ri-map-pin-line ri-lg text-primary"></i>
-                                <span class="seller-name">${location}</span>
+                        <div class="cart-item">
+                            <div class="cart-item-image">
+                                ${item.imageUrl 
+                                    ? `<img src="${item.imageUrl}" alt="${item.name}" class="w-full h-full object-cover">` 
+                                    : `<i class="ri-shopping-bag-line ri-xl text-gray-400"></i>`
+                                }
                             </div>
-                            
-                            <div class="seller-items">
-                    `;
-                    
-                    locData.items.forEach(item => {
-                        html += `
-                            <div class="cart-item">
-                                <div class="cart-item-image">
-                                    ${item.imageUrl 
-                                        ? `<img src="${item.imageUrl}" alt="${item.name}" class="w-full h-full object-cover">` 
-                                        : `<i class="ri-shopping-bag-line ri-xl text-gray-400"></i>`
-                                    }
+                            <div class="cart-item-details">
+                                <div class="cart-item-title">${item.name}</div>
+                                <div class="cart-item-price">${item.price.toLocaleString('fr-FR')} HTG × ${item.quantity}</div>
+                                <div class="cart-item-quantity">
+                                    <button class="quantity-btn minus" data-id="${item.id}">-</button>
+                                    <span class="quantity-value">${item.quantity}</span>
+                                    <button class="quantity-btn plus" data-id="${item.id}">+</button>
+                                    <button class="remove-btn" data-id="${item.id}">
+                                        <i class="ri-delete-bin-line"></i>
+                                    </button>
                                 </div>
-                                <div class="cart-item-details">
-                                    <div class="cart-item-title">${item.name}</div>
-                                    <div class="cart-item-price">${item.price.toLocaleString('fr-FR')} HTG × ${item.quantity}</div>
-                                    <div class="cart-item-quantity">
-                                        <button class="quantity-btn minus" data-id="${item.id}">-</button>
-                                        <span class="quantity-value">${item.quantity}</span>
-                                        <button class="quantity-btn plus" data-id="${item.id}">+</button>
-                                        <button class="remove-btn" data-id="${item.id}">
-                                            <i class="ri-delete-bin-line"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="text-primary font-semibold">${(item.price * item.quantity).toLocaleString('fr-FR')} HTG</div>
                             </div>
-                        `;
-                    });
-                    
-                    html += `
-                            </div>
-                            <div class="seller-total">
-                                <span>Sous-total (${locData.items.length} produit${locData.items.length > 1 ? 's' : ''}):</span>
-                                <span>${locData.subtotal.toLocaleString('fr-FR')} HTG</span>
-                            </div>
+                            <div class="text-primary font-semibold">${(item.price * item.quantity).toLocaleString('fr-FR')} HTG</div>
                         </div>
                     `;
                 });
@@ -1031,54 +1059,46 @@
                     return;
                 }
                 
-                
-                if (Object.keys(departmentManagers).length === 0) {
-                    await loadDepartmentManagers();
+                const departement = commandeDepartement.value;
+                let commune = commandeCommune.value;
+
+                if (commune === 'autre') {
+                    commune = nouvelleCommuneInput.value.trim();
+                    if (!commune) {
+                        showToast('Veuillez entrer le nom de votre commune');
+                        nouvelleCommuneInput.focus();
+                        return;
+                    }
+                }
+
+                if (!departement || !commune) {
+                    showToast('Veuillez sélectionner un département et une commune');
+                    return;
                 }
                 
                 
-                const departmentCounts = {};
-                cart.forEach(item => {
-                    const normalizedLocation = normalizeLocationName(item.location);
-                    const department = getFullLocationName(normalizedLocation);
-                    
-                    if (department) {
-                        if (!departmentCounts[department]) {
-                            departmentCounts[department] = 0;
-                        }
-                        departmentCounts[department] += item.quantity;
-                    }
-                });
-                
-             
-                let maxCount = 0;
-                let selectedDepartment = null;
-                
-                for (const [department, count] of Object.entries(departmentCounts)) {
-                    if (count > maxCount) {
-                        maxCount = count;
-                        selectedDepartment = department;
-                    }
+                if (allManagers.length === 0) {
+                    await loadAllManagers();
                 }
                 
-              
-                const manager = selectedDepartment ? findDepartmentManager(selectedDepartment) : null;
+                const manager = findResponsible(departement, commune);
                 
                 if (!manager) {
-                    showToast('Aucun responsable trouvé pour ce département');
+                    showToast('Aucun responsable trouvé pour votre localité');
                     return;
                 }
                 
                
                 let message = `Nouvelle commande sur Orjeun!%0A%0A`;
                 message += `Client: ${currentUser.nom} ${currentUser.prenom}%0A`;
-                message += `Téléphone: ${currentUser.phone || 'Non fourni'}%0A`;
+                message += `Téléphone: ${currentUser.telephone || 'Non fourni'}%0A`;
+                message += `Département: ${departement}%0A`;
+                message += `Commune: ${commune}%0A`;
                 message += `Adresse: ${address}%0A%0A`;
                 message += `Détails de la commande:%0A%0A`;
                 
                 cart.forEach((item, index) => {
                     message += `${index + 1}. ${item.name}%0A`;
-                    message += `   - Lieu: ${item.location}%0A`;
                     message += `   - Quantité: ${item.quantity}%0A`;
                     message += `   - Prix unitaire: ${item.price.toLocaleString('fr-FR')} HTG%0A`;
                     message += `   - Total: ${(item.price * item.quantity).toLocaleString('fr-FR')} HTG%0A%0A`;
@@ -1089,7 +1109,7 @@
                 message += `Merci de traiter cette commande!`;
                 
                
-                window.open(`https://wa.me/${manager.num}?text=${message}`, '_blank');
+                window.open(`https://wa.me/${manager.phone || ''}?text=${message}`, '_blank');
                 
                 
                 cart = [];
@@ -1098,7 +1118,101 @@
                 showToast('Votre commande a été envoyée au responsable!');
             }
 
-         
+            async function chargerDepartementsCommande() {
+                try {
+                    const snapshot = await database.ref('region_nationale').once('value');
+                    commandeDepartement.innerHTML = '<option value="" disabled selected>Sélectionnez un département</option>';
+                    
+                    snapshot.forEach(departmentSnapshot => {
+                        const option = document.createElement('option');
+                        option.value = departmentSnapshot.key;
+                        option.textContent = departmentSnapshot.key;
+                        commandeDepartement.appendChild(option);
+                    });
+                } catch (error) {
+                    console.error('Erreur lors du chargement des départements:', error);
+                    commandeDepartement.innerHTML = '<option value="" disabled selected>Erreur de chargement</option>';
+                }
+            }
+
+            async function chargerCommunesCommande(departement) {
+                try {
+                    const snapshot = await database.ref(`region_nationale/${departement}`).once('value');
+                    commandeCommune.innerHTML = '<option value="" disabled selected>Sélectionnez une commune</option>';
+                    
+                    snapshot.forEach(communeSnapshot => {
+                        if(communeSnapshot.key && communeSnapshot.key.trim() !== '') {
+                            const option = document.createElement('option');
+                            option.value = communeSnapshot.key;
+                            option.textContent = communeSnapshot.key;
+                            commandeCommune.appendChild(option);
+                        }
+                    });
+                    
+                    const autreOption = document.createElement('option');
+                    autreOption.value = 'autre';
+                    autreOption.textContent = 'Ma commune n\'est pas dans la liste';
+                    commandeCommune.appendChild(autreOption);
+                } catch (error) {
+                    console.error('Erreur lors du chargement des communes:', error);
+                    commandeCommune.innerHTML = '<option value="" disabled selected>Erreur de chargement</option>';
+                }
+            }
+
+            // Charger les catégories depuis Firebase
+            async function loadCategories() {
+                try {
+                    const snapshot = await database.ref('categories').once('value');
+                    categories = [];
+                    
+                    if (snapshot.exists()) {
+                        snapshot.forEach(childSnapshot => {
+                            categories.push({
+                                id: childSnapshot.key,
+                                name: childSnapshot.val().name
+                            });
+                        });
+                    }
+                    
+                    // Trier les catégories par ordre alphabétique
+                    categories.sort((a, b) => a.name.localeCompare(b.name));
+                    
+                    // Ajouter la catégorie "Tous" en premier
+                    categories.unshift({ id: 'tous', name: 'Tous' });
+                    
+                    renderCategoryButtons();
+                } catch (error) {
+                    console.error('Erreur lors du chargement des catégories:', error);
+                }
+            }
+            
+            // Rendre les boutons de catégorie
+            function renderCategoryButtons() {
+                categoryButtons.innerHTML = '';
+                
+                categories.forEach(category => {
+                    const button = document.createElement('button');
+                    button.className = `filter-button ${activeCategory === category.id ? 'active' : ''}`;
+                    button.textContent = category.name;
+                    button.dataset.category = category.id;
+                    
+                    button.addEventListener('click', () => {
+                        activeCategory = category.id;
+                        // Mettre à jour le style des boutons
+                        document.querySelectorAll('.filter-button').forEach(btn => {
+                            btn.classList.remove('active');
+                        });
+                        button.classList.add('active');
+                        
+                        // Appliquer les filtres
+                        applyFilters();
+                    });
+                    
+                    categoryButtons.appendChild(button);
+                });
+            }
+            
+            // Charger les produits
             async function loadProducts() {
                 loadingOverlay.style.display = 'flex';
                 
@@ -1107,14 +1221,14 @@
                     if (productsSnapshot.exists()) {
                         const productsData = productsSnapshot.val();
                         
-                        
+                        // Construire l'index des produits
                         productsIndex = {};
                         Object.keys(productsData).forEach(key => {
                             productsIndex[key] = productsData[key];
                         });
                     }
 
-                   
+                    // Charger les produits des vendeurs
                     const sellersSnapshot = await database.ref('produits_vendeurs').once('value');
                     if (!sellersSnapshot.exists()) {
                         renderNoProductsMessage();
@@ -1124,20 +1238,11 @@
                     
                     const sellersData = sellersSnapshot.val();
                     const productsArray = [];
-                    locationsMap = {}; 
                     
                     Object.keys(sellersData).forEach(key => {
                         const item = sellersData[key];
                         const productId = item.productId;
                         const productData = productsIndex[productId] || {};
-                        
-                        
-                        const location = item.lieux || item.department || item.region || 'Lieu inconnu';
-                        
-                    
-                        if (!locationsMap[location]) {
-                            locationsMap[location] = true;
-                        }
                         
                         productsArray.push({
                             id: key,
@@ -1145,38 +1250,14 @@
                             name: item.productName || 'Produit sans nom',
                             price: item.totalAmount || 0,
                             quantity: item.quantity || 1,
-                            location: location,
-                            imageUrl: productData.imageUrl || null
+                            imageUrl: productData.imageUrl || null,
+                            categoryId: productData.categoryId || null,
+                            categoryName: productData.categoryName || 'Non classé'
                         });
                     });
                     
-                  
-                    const grouped = {};
-                    productsArray.forEach(prod => {
-                        const key = `${prod.name}|${normalizeLocationName(prod.location)}`;
-                        if (!grouped[key]) {
-                            grouped[key] = [];
-                        }
-                        grouped[key].push(prod);
-                    });
-                    
-                 
-                    allProducts = Object.keys(grouped).map(key => {
-                        const [name, location] = key.split('|');
-                        return {
-                            name,
-                            location: getFullLocationName(location),
-                            sellers: grouped[key]
-                        };
-                    });
-                    
-                 
+                    allProducts = [...productsArray];
                     filteredProducts = [...allProducts];
-                    
-                   
-                    renderFilterButtons();
-                    
-                    
                     renderProducts();
                     
                 } catch (err) {
@@ -1188,7 +1269,6 @@
             }
 
             function renderNoProductsMessage() {
-                filterButtonsContainer.innerHTML = '';
                 productGrid.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">
@@ -1201,95 +1281,37 @@
                 productsCountSpan.textContent = '0 produit trouvé';
             }
 
-            
-            function renderFilterButtons() {         
-                const locations = new Set();
-                allProducts.forEach(group => {
-                    locations.add(group.location);
-                });
-                
-                const locationsArray = Array.from(locations);
-                
-                filterButtonsContainer.innerHTML = '';
-                const allBtn = document.createElement('button');
-                allBtn.textContent = 'Tous';
-                allBtn.className = 'filter-tag active';
-                allBtn.addEventListener('click', () => {
-                    activeLocation = 'Tous';
-                    updateFilterButtonsStyling();
-                    applyFilters();
-                });
-                filterButtonsContainer.appendChild(allBtn);
-
-               
-                locationsArray.forEach(loc => {
-                    const btn = document.createElement('button');
-                    btn.textContent = loc;
-                    btn.className = 'filter-tag';
-                    btn.addEventListener('click', () => {
-                        activeLocation = loc;
-                        updateFilterButtonsStyling();
-                        applyFilters();
-                    });
-                    filterButtonsContainer.appendChild(btn);
-                });
-
-  
-                updateFilterButtonsStyling();
-            }
-
-  
-            function updateFilterButtonsStyling() {
-                Array.from(filterButtonsContainer.children).forEach(btn => {
-                    const loc = btn.textContent.trim();
-                    if (loc === activeLocation) {
-                        btn.classList.remove('bg-gray-100', 'text-gray-700');
-                        btn.classList.add('active');
-                    } else {
-                        btn.classList.remove('active');
-                    }
-                });
-            }
-
            
             function applyFilters() {
-                
-                if (activeLocation === 'Tous') {
-                    filteredProducts = [...allProducts];
+                // Filtrer par catégorie
+                if (activeCategory !== 'tous') {
+                    filteredProducts = allProducts.filter(product => 
+                        product.categoryId === activeCategory
+                    );
                 } else {
-                    filteredProducts = allProducts.filter(group => 
-                        group.location === activeLocation
-                    );
+                    filteredProducts = [...allProducts];
                 }
                 
-                
+                // Filtrer par terme de recherche
                 if (searchTerm) {
-                    filteredProducts = filteredProducts.filter(group => 
-                        group.name.toLowerCase().includes(searchTerm.toLowerCase())
+                    filteredProducts = filteredProducts.filter(product => 
+                        product.name.toLowerCase().includes(searchTerm.toLowerCase())
                     );
                 }
                 
-                // 
+                // Trier les produits
                 switch (currentSort) {
                     case 'price-asc':
-                        filteredProducts.sort((a, b) => {
-                            const minPriceA = Math.min(...a.sellers.map(s => s.price));
-                            const minPriceB = Math.min(...b.sellers.map(s => s.price));
-                            return minPriceA - minPriceB;
-                        });
+                        filteredProducts.sort((a, b) => a.price - b.price);
                         break;
                     case 'price-desc':
-                        filteredProducts.sort((a, b) => {
-                            const minPriceA = Math.min(...a.sellers.map(s => s.price));
-                            const minPriceB = Math.min(...b.sellers.map(s => s.price));
-                            return minPriceB - minPriceA;
-                        });
+                        filteredProducts.sort((a, b) => b.price - a.price);
                         break;
                     case 'newest':
-                       
+                        // Pas de date dans les données, on ne fait rien
                         break;
                     default:
-                      
+                        // Aucun tri spécifique
                         break;
                 }
                              
@@ -1317,49 +1339,31 @@
                 productsCountSpan.textContent = `${filteredProducts.length} produit${filteredProducts.length > 1 ? 's' : ''} trouvé${filteredProducts.length > 1 ? 's' : ''}`;
                 
              
-                filteredProducts.forEach(group => {
+                filteredProducts.forEach(product => {
                     const card = document.createElement('div');
                     card.className = 'product-card';
                     
-                   
-                    const minPrice = Math.min(...group.sellers.map(s => s.price));
-                    const maxPrice = Math.max(...group.sellers.map(s => s.price));
-                    
-                   
-                    let productImage = null;
-                    for (const seller of group.sellers) {
-                        if (seller.imageUrl) {
-                            productImage = seller.imageUrl;
-                            break;
-                        }
-                    }
-                    
-                   
-                    let priceHTML = '';
-                    if (minPrice === maxPrice) {
-                        priceHTML = `<p class="product-price">${minPrice.toLocaleString('fr-FR')} HTG</p>`;
-                    } else {
-                        priceHTML = `<p class="product-price-range">${minPrice.toLocaleString('fr-FR')} - ${maxPrice.toLocaleString('fr-FR')} HTG</p>`;
-                    }
-                    
                     card.innerHTML = `
                         <div class="product-image">
-                            ${productImage 
-                                ? `<img src="${productImage}" alt="${group.name}" class="w-full h-full object-cover">` 
+                            ${product.imageUrl 
+                                ? `<img src="${product.imageUrl}" alt="${product.name}" class="w-full h-full object-cover">` 
                                 : `<div class="w-full h-full flex items-center justify-center">
                                     <i class="ri-shopping-bag-line ri-4x text-gray-300"></i>
                                   </div>`
                             }
                         </div>
                         <div class="product-content">
-                            <h3 class="product-title">${group.name}</h3>
-                            <div class="product-meta">
-                                <i class="ri-map-pin-line"></i>
-                                <span>${group.location}</span>
-                            </div>
-                            ${priceHTML}
+                            <h3 class="product-title">${product.name}</h3>
                             
-                            <button class="contact-btn add-to-cart" data-id="${group.sellers[0].id}" data-name="${group.name}" data-price="${minPrice}" data-image="${productImage || ''}" data-location="${group.location}">
+                            <!-- Affichage de la catégorie -->
+                            <div class="product-category">
+                                <i class="ri-price-tag-3-line"></i>
+                                ${product.categoryName}
+                            </div>
+                            
+                            <p class="product-price">${product.price.toLocaleString('fr-FR')} HTG</p>
+                            
+                            <button class="contact-btn add-to-cart" data-id="${product.id}" data-name="${product.name}" data-price="${product.price}" data-image="${product.imageUrl || ''}">
                                 <i class="ri-shopping-cart-line ri-lg mr-2"></i> Ajouter au panier
                             </button>
                         </div>
@@ -1372,14 +1376,12 @@
                         const name = addBtn.dataset.name;
                         const price = parseFloat(addBtn.dataset.price);
                         const imageUrl = addBtn.dataset.image;
-                        const location = addBtn.dataset.location;
                         
                         addToCart({
                             id: id,
                             name: name,
                             price: price,
-                            imageUrl: imageUrl,
-                            location: location
+                            imageUrl: imageUrl
                         });
                     });
                     
@@ -1407,7 +1409,9 @@
                         currentUser = user;
                         appContent.style.display = 'block';
                         loginMessage.style.display = 'none';
-                        await loadDepartmentManagers();
+                        await loadAllManagers();
+                        await chargerDepartementsCommande();
+                        await loadCategories(); // Charger les catégories
                         await loadProducts();
                         initCart();
                     } else {
