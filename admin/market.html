@@ -315,6 +315,16 @@
             color: #666;
             margin-top: 5px;
         }
+        .category-tag {
+            display: inline-flex;
+            align-items: center;
+            background-color: #e0e7ff;
+            color: #4f46e5;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body class="pb-20">
@@ -695,7 +705,8 @@
                         totalAmount: total,
                         lieux: lieux,
                         status: "pending",
-                        date: firebase.database.ServerValue.TIMESTAMP
+                        date: firebase.database.ServerValue.TIMESTAMP,
+                        categoryName: currentProduct.categoryName || '' // Ajout de la catégorie
                     };
                     
                     if (isEmprunt) {
@@ -743,7 +754,8 @@
                                     imageUrl: product.imageUrl || '',
                                     whatsapp: product.Num_vendeur || '',
                                     createdAt: product.createdAt || 0,
-                                    stock: product.Quantity_actual
+                                    stock: product.Quantity_actual,
+                                    categoryName: product.categoryName || '' // Ajout de la catégorie
                                 });
                             }
                         });
@@ -879,7 +891,17 @@
                                         <span>Stock: ${prod.stock}</span>
                                     </div>
                                 </div>
-                                <button class="purchase-btn block w-full py-2.5 bg-primary text-white text-center rounded-lg font-medium hover:bg-primary/90 transition-colors !rounded-button cursor-pointer">
+                                
+                                <!-- Affichage de la catégorie -->
+                                ${prod.categoryName ? `
+                                <div class="mt-1">
+                                    <span class="category-tag">
+                                        <i class="ri-price-tag-3-line ri-xs mr-1"></i>${prod.categoryName}
+                                    </span>
+                                </div>
+                                ` : ''}
+                                
+                                <button class="purchase-btn block w-full py-2.5 bg-primary text-white text-center rounded-lg font-medium hover:bg-primary/90 transition-colors !rounded-button cursor-pointer mt-3">
                                     Commander
                                 </button>
                             </div>
