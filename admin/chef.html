@@ -544,9 +544,31 @@ body {
     </div>
   </div>
   
+  <!-- Nouveaux filtres ajoutés -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Département</label>
+      <select id="department-filter" class="w-full p-2 border rounded-lg">
+        <option value="">Tous les départements</option>
+      </select>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Commune</label>
+      <select id="commune-filter" class="w-full p-2 border rounded-lg" disabled>
+        <option value="">Toutes les communes</option>
+      </select>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">&nbsp;</label>
+      <button id="reset-filters" class="w-full py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">
+        Réinitialiser
+      </button>
+    </div>
+  </div>
+  
   <div class="mb-4">
     <div class="relative">
-      <input type="text" id="admin-search" placeholder="Rechercher un membre..." class="w-full p-2 pl-10 border rounded-lg focus:ring-2 focus:ring-royal-500 focus:border-royal-500">
+      <input type="text" id="admin-search" placeholder="Rechercher par nom, email ou téléphone..." class="w-full p-2 pl-10 border rounded-lg focus:ring-2 focus:ring-royal-500 focus:border-royal-500">
       <i class="ri-search-line absolute left-3 top-3 text-gray-400"></i>
     </div>
   </div>
@@ -695,6 +717,7 @@ let revenueChart = null;
 let distributionChart = null;
 let vendorSalesByEmail = {};
 let departments = [];
+let communesByDepartment = {};
 
 function showToast(message, duration = 3000) {
   const toast = document.getElementById('toast');
@@ -759,8 +782,7 @@ async function initApp() {
   const adminSearch = document.getElementById('admin-search');
   if (adminSearch) {
     adminSearch.addEventListener('input', function() {
-      const searchTerm = this.value;
-      filterAdminMembers(searchTerm);
+      filterAdminMembers();
     });
   }
 
@@ -768,6 +790,15 @@ async function initApp() {
   departmentSelect.addEventListener('change', function() {
     displayDepartmentHierarchy(this.value);
   });
+  
+  // Nouveaux écouteurs d'événements pour les filtres
+  document.getElementById('department-filter').addEventListener('change', function() {
+    updateCommuneFilter();
+    filterAdminMembers();
+  });
+  
+  document.getElementById('commune-filter').addEventListener('change', filterAdminMembers);
+  document.getElementById('reset-filters').addEventListener('click', resetFilters);
 }
 
 async function confirmPayment() {
@@ -905,6 +936,22 @@ async function loadData() {
     nationalManagers = managers.filter(manager => manager.type === "national");
     
     departments = [...new Set(users.map(user => user.departement).filter(Boolean))];
+    
+    // Construire l'objet communesByDepartment
+    communesByDepartment = {};
+    users.forEach(user => {
+      if (user.departement && user.commune) {
+        if (!communesByDepartment[user.departement]) {
+          communesByDepartment[user.departement] = new Set();
+        }
+        communesByDepartment[user.departement].add(user.commune);
+      }
+    });
+    
+    // Convertir les Set en Array et trier
+    for (const dept in communesByDepartment) {
+      communesByDepartment[dept] = Array.from(communesByDepartment[dept]).sort();
+    }
     
     const productsSnapshot = await database.ref('produits').once('value');
     const productsData = productsSnapshot.val() || {};
@@ -1060,7 +1107,7 @@ function updateStatistics() {
   document.getElementById('profit-total').textContent = `Total: ${totalSalesAmount.toLocaleString('fr-FR')} HTG`;
   document.getElementById('total-professors').textContent = professors.length;
   document.getElementById('current-total-sales').textContent = totalSalesAmount.toLocaleString('fr-FR') + ' HTG';
-  document.getElementById('total-members').textContent = users.filter(user => user.confirmed).length;
+  document.getElementById('total-members').textContent = users.length;
 }
 
 async function savePercentages() {
@@ -1695,22 +1742,79 @@ function updateActualDistribution() {
   document.getElementById('orjeun-actual').textContent = orjeunAmount.toLocaleString('fr-FR') + ' HTG';
 }
 
-function filterAdminMembers(searchTerm) {
-  const confirmedMembers = users.filter(user => user.confirmed);
-  const filteredMembers = confirmedMembers.filter(user => 
-    (user.nom && user.nom.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (user.prenom && user.prenom.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (user.phone && user.phone.includes(searchTerm))
-  );
+function filterAdminMembers() {
+  const searchTerm = document.getElementById('admin-search').value.toLowerCase();
+  const selectedDept = document.getElementById('department-filter').value;
+  const selectedCommune = document.getElementById('commune-filter').value;
+  
+  const filteredMembers = users.filter(user => {
+    // Filtre par recherche
+    const matchesSearch = 
+      (user.nom && user.nom.toLowerCase().includes(searchTerm)) ||
+      (user.prenom && user.prenom.toLowerCase().includes(searchTerm)) ||
+      (user.email && user.email.toLowerCase().includes(searchTerm)) ||
+      (user.phone && user.phone.includes(searchTerm));
+    
+    // Filtre par département
+    const matchesDept = selectedDept ? (user.departement === selectedDept) : true;
+    
+    // Filtre par commune
+    const matchesCommune = selectedCommune ? (user.commune === selectedCommune) : true;
+    
+    return matchesSearch && matchesDept && matchesCommune;
+  });
   
   renderMembersList(filteredMembers);
 }
 
+function updateCommuneFilter() {
+  const deptFilter = document.getElementById('department-filter').value;
+  const communeFilter = document.getElementById('commune-filter');
+  
+  communeFilter.innerHTML = '<option value="">Toutes les communes</option>';
+  
+  if (deptFilter && communesByDepartment[deptFilter]) {
+    communeFilter.disabled = false;
+    communesByDepartment[deptFilter].forEach(commune => {
+      const option = document.createElement('option');
+      option.value = commune;
+      option.textContent = commune;
+      communeFilter.appendChild(option);
+    });
+  } else {
+    communeFilter.disabled = true;
+  }
+}
+
+function resetFilters() {
+  document.getElementById('department-filter').value = '';
+  document.getElementById('commune-filter').value = '';
+  document.getElementById('commune-filter').disabled = true;
+  document.getElementById('admin-search').value = '';
+  
+  filterAdminMembers();
+}
+
 function updateMembersList() {
-  const confirmedMembers = users.filter(user => user.confirmed);
-  document.getElementById('total-members').textContent = confirmedMembers.length;
-  renderMembersList(confirmedMembers);
+  document.getElementById('total-members').textContent = users.length;
+  
+  // Initialiser le filtre des départements
+  const departmentFilter = document.getElementById('department-filter');
+  departmentFilter.innerHTML = '<option value="">Tous les départements</option>';
+  departments.forEach(dept => {
+    const option = document.createElement('option');
+    option.value = dept;
+    option.textContent = dept;
+    departmentFilter.appendChild(option);
+  });
+  
+  // Réinitialiser les autres filtres
+  document.getElementById('commune-filter').innerHTML = '<option value="">Toutes les communes</option>';
+  document.getElementById('commune-filter').disabled = true;
+  document.getElementById('admin-search').value = '';
+  
+  // Afficher tous les membres initialement
+  renderMembersList(users);
 }
 
 function renderMembersList(membersArray) {
