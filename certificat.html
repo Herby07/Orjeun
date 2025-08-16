@@ -222,6 +222,23 @@
       font-size: 34px;
       color: white;
     }
+    
+    /* Animation pour le badge de succès */
+    @keyframes badgePulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    .badge-success {
+      background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+      color: white;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-weight: 600;
+      box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+      animation: badgePulse 2s ease-in-out infinite;
+    }
   </style>
 </head>
 <body>
@@ -264,6 +281,12 @@
             <div class="certificate-badge">
               Certificat de Réussite
             </div>
+          </div>
+          
+          <!-- Badge pour afficher le succès de l'enregistrement -->
+          <div id="courseSavedBadge" class="badge-success hidden mt-4">
+            <i class="ri-check-line mr-2"></i>
+            Formation enregistrée dans votre profil
           </div>
         </div>
         
@@ -336,7 +359,9 @@
     </div>
   </main>
 
-
+  <div class="whatsapp-icon">
+    <i class="ri-whatsapp-fill"></i>
+  </div>
 
   <script>
     const firebaseConfig = {
@@ -481,6 +506,32 @@
       successMessage.classList.remove('hidden');
     }
     
+    // Fonction pour ajouter la formation terminée à la base de données
+    async function saveCompletedCourse(userId, formationName) {
+      try {
+        // Créer la référence pour la table cours_finished
+        const coursFinishedRef = database.ref(`membres/${userId}/cours_finished`);
+        
+        // Ajouter la formation avec un timestamp
+        const newCourseRef = coursFinishedRef.push();
+        await newCourseRef.set({
+          nom: formationName,
+          date: new Date().toISOString()
+        });
+        
+        console.log('Formation enregistrée avec succès dans cours_finished');
+        
+        // Afficher le badge de succès
+        const badge = document.getElementById('courseSavedBadge');
+        badge.classList.remove('hidden');
+        
+        return true;
+      } catch (error) {
+        console.error('Erreur lors de l\'enregistrement de la formation terminée:', error);
+        return false;
+      }
+    }
+    
     document.addEventListener('DOMContentLoaded', async function() {
       userData = await verifyUser();
       if (!userData) return;
@@ -499,6 +550,11 @@
         
         if (formationData.prof) {
           professorData = await getProfessorByEmail(formationData.prof);
+        }
+        
+        // Enregistrer la formation terminée pour l'utilisateur
+        if (userData.id && formationData.titre) {
+          await saveCompletedCourse(userData.id, formationData.titre);
         }
       }
       
