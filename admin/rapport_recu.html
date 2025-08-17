@@ -211,6 +211,23 @@
             margin-top: 5px;
             color: #4b5563;
         }
+        .student-status {
+            font-size: 0.875rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background-color: #e5e7eb;
+        }
+        .student-status.finished {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        .student-status.in-progress {
+            background-color: #fffbeb;
+            color: #854d0e;
+        }
+        .student-details {
+            flex-grow: 1;
+        }
     </style>
 </head>
 <body class="min-h-screen pt-16 pb-24 bg-gray-50">
@@ -399,7 +416,7 @@
                 </div>
                 
                 <div class="mb-4">
-                    <h4 class="text-lg font-semibold text-gray-800 mb-3">Liste des présences</h4>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-3" id="presenceTitle">Liste des présences</h4>
                     <div id="presenceList" class="presence-list">
                     </div>
                     <div class="presence-count" id="presenceCount">0 élèves présents</div>
@@ -663,9 +680,11 @@
                 if (report.typeFormation === "online") {
                     typeBadge.className = 'type-badge badge-online';
                     typeBadge.textContent = 'Formation en ligne';
+                    document.getElementById('presenceTitle').innerHTML = '<i class="ri-user-line mr-2"></i> Participants à la formation';
                 } else {
                     typeBadge.className = 'type-badge badge-professional';
                     typeBadge.textContent = 'Formation professionnelle';
+                    document.getElementById('presenceTitle').innerHTML = '<i class="ri-user-check-line mr-2"></i> Liste des présences';
                 }
                 
                 document.getElementById('modalReportContent').textContent = report.contenu || 'Aucun contenu disponible';
@@ -676,23 +695,47 @@
                 presenceList.innerHTML = '';
                 
                 if (report.presences && Object.keys(report.presences).length > 0) {
-                    presenceCount.textContent = Object.keys(report.presences).length + ' élèves présents';
+                    presenceCount.textContent = Object.keys(report.presences).length + ' élèves participants';
                     
                     for (const studentId in report.presences) {
-                        const studentName = report.presences[studentId];
+                        const student = report.presences[studentId];
+                        let studentName = '';
+                        let studentStatus = '';
+                        
+                        if (typeof student === 'string') {
+                            // Ancien format (string)
+                            studentName = student;
+                        } else if (student && typeof student === 'object') {
+                            // Nouveau format (objet)
+                            studentName = student.nom || 'Nom inconnu';
+                            
+                            // Ajout du statut pour les formations en ligne
+                            if (report.typeFormation === "online") {
+                                studentStatus = student.finished 
+                                    ? '<span class="student-status finished">Terminé</span>' 
+                                    : '<span class="student-status in-progress">En cours</span>';
+                            }
+                        } else {
+                            studentName = 'Nom inconnu';
+                        }
                         
                         const presenceItem = document.createElement('div');
                         presenceItem.className = 'presence-item';
                         presenceItem.innerHTML = `
-                            <i class="ri-user-line"></i>
-                            <span>${studentName}</span>
+                            <div class="flex justify-between w-full items-center">
+                                <div class="student-details">
+                                    <span class="font-medium">${studentName}</span>
+                                    <div class="text-xs text-gray-500">${student.telephone || 'Téléphone non renseigné'}</div>
+                                </div>
+                                ${studentStatus || ''}
+                            </div>
                         `;
                         
                         presenceList.appendChild(presenceItem);
                     }
                 } else {
-                    presenceCount.textContent = '0 élèves présents';
-                    presenceList.innerHTML = '<p class="text-gray-500 text-center py-4">Aucune présence enregistrée</p>';
+                    presenceCount.textContent = '0 élèves participants';
+                    presenceList.innerHTML = '<p class="text-gray-500 text-center py-4">Aucun participant enregistré</p>';
                 }
                 
                 document.getElementById('reportModal').style.display = 'flex';
@@ -743,13 +786,26 @@ ${selectedReport.contenu || 'Aucun contenu disponible'}
                 `;
                 
                 if (selectedReport.presences && Object.keys(selectedReport.presences).length > 0) {
-                    content += `\n\nÉlèves présents:\n`;
+                    content += `\n\nÉlèves participants:\n`;
                     for (const studentId in selectedReport.presences) {
-                        content += `- ${selectedReport.presences[studentId]}\n`;
+                        const student = selectedReport.presences[studentId];
+                        let studentName = '';
+                        let status = '';
+                        
+                        if (typeof student === 'string') {
+                            studentName = student;
+                        } else if (student && typeof student === 'object') {
+                            studentName = student.nom || 'Nom inconnu';
+                            if (selectedReport.typeFormation === "online") {
+                                status = student.finished ? ' (Terminé)' : ' (En cours)';
+                            }
+                        }
+                        
+                        content += `- ${studentName}${status}\n`;
                     }
                     content += `\nTotal: ${Object.keys(selectedReport.presences).length} élèves`;
                 } else {
-                    content += `\n\nÉlèves présents: Aucun`;
+                    content += `\n\nÉlèves participants: Aucun`;
                 }
                 
                 const blob = new Blob([content], { type: 'text/plain' });
