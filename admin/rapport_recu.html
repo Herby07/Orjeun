@@ -680,7 +680,7 @@
                 if (report.typeFormation === "online") {
                     typeBadge.className = 'type-badge badge-online';
                     typeBadge.textContent = 'Formation en ligne';
-                    document.getElementById('presenceTitle').innerHTML = '<i class="ri-user-line mr-2"></i> Participants à la formation';
+                    document.getElementById('presenceTitle').innerHTML = '<i class="ri-user-line mr-2"></i> Participants à la formation (en cours seulement)';
                 } else {
                     typeBadge.className = 'type-badge badge-professional';
                     typeBadge.textContent = 'Formation professionnelle';
@@ -695,10 +695,30 @@
                 presenceList.innerHTML = '';
                 
                 if (report.presences && Object.keys(report.presences).length > 0) {
-                    presenceCount.textContent = Object.keys(report.presences).length + ' élèves participants';
+                    // Filtrer pour n'afficher que les participants en cours (non terminés)
+                    let activeParticipants = {};
+                    let activeCount = 0;
                     
                     for (const studentId in report.presences) {
                         const student = report.presences[studentId];
+                        
+                        if (typeof student === 'object') {
+                            // Nouveau format avec statut
+                            if (!student.finished) {
+                                activeParticipants[studentId] = student;
+                                activeCount++;
+                            }
+                        } else {
+                            // Ancien format (string) - on suppose qu'ils sont en cours
+                            activeParticipants[studentId] = student;
+                            activeCount++;
+                        }
+                    }
+                    
+                    presenceCount.textContent = activeCount + ' élèves participants (en cours)';
+                    
+                    for (const studentId in activeParticipants) {
+                        const student = activeParticipants[studentId];
                         let studentName = '';
                         let studentStatus = '';
                         
@@ -786,7 +806,9 @@ ${selectedReport.contenu || 'Aucun contenu disponible'}
                 `;
                 
                 if (selectedReport.presences && Object.keys(selectedReport.presences).length > 0) {
-                    content += `\n\nÉlèves participants:\n`;
+                    content += `\n\nÉlèves participants (en cours seulement):\n`;
+                    
+                    // Filtrer pour n'inclure que les participants en cours
                     for (const studentId in selectedReport.presences) {
                         const student = selectedReport.presences[studentId];
                         let studentName = '';
@@ -797,6 +819,7 @@ ${selectedReport.contenu || 'Aucun contenu disponible'}
                         } else if (student && typeof student === 'object') {
                             studentName = student.nom || 'Nom inconnu';
                             if (selectedReport.typeFormation === "online") {
+                                if (student.finished) continue; // Sauter les terminés
                                 status = student.finished ? ' (Terminé)' : ' (En cours)';
                             }
                         }
