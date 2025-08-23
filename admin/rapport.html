@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rapports de Formation - FormaPro</title>
 <script src="https://cdn.tailwindcss.com/3.4.16"></script>
-<script>tailwind.config={theme:{extend:{colors:{primary:'#4F46E5',secondary:'#8B5CF6',tertiary:'#0EA5E9'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg:'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+<script>tailwind.config={theme:{extend:{colors:{primary:'#4F46E5',secondary:'#8B5CF6',tertiary:'#0EA5E9'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
@@ -149,7 +149,6 @@ body {
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
-  flex-wrap: wrap;
 }
 .filter-btn {
   padding: 8px 16px;
@@ -157,7 +156,6 @@ body {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s;
-  white-space: nowrap;
 }
 .filter-btn.active {
   background-color: #4F46E5;
@@ -351,33 +349,6 @@ body {
 }
 .student-details {
   flex-grow: 1;
-}
-/* Responsive adjustments */
-@media (max-width: 640px) {
-  .formation-filter {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .filter-btn {
-    width: 100%;
-    text-align: center;
-  }
-  .presence-modal-content {
-    width: 95%;
-    margin: 10px;
-  }
-  .report-editor {
-    padding: 15px;
-  }
-  .grid.grid-cols-1.md\:grid-cols-2 {
-    grid-template-columns: 1fr;
-  }
-  .flex.flex-col.md\:flex-row {
-    flex-direction: column;
-  }
-  .text-center {
-    margin-top: 15px;
-  }
 }
 </style>
 </head>
@@ -799,8 +770,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const presenceSummary = document.getElementById('presenceSummary');
       presenceList.innerHTML = '';
       if (Object.keys(presences).length === 0) {
-        presenceSummary.classList.remove('hidden');
-        presenceList.innerHTML = '<div class="text-center text-gray-500 py-4">Aucun participant enregistré</div>';
+        presenceSummary.classList.add('hidden');
         return;
       }
       presenceSummary.classList.remove('hidden');
@@ -822,42 +792,22 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error("Erreur lors du chargement des présences:", error);
     }
   }
-  async function getOnlineParticipants(formationTitle) {
+  async function getOnlineParticipants(formationId) {
     try {
       const membersRef = database.ref('membres');
       const membersSnapshot = await membersRef.once('value');
       const members = membersSnapshot.val();
       const participants = [];
-      
-      if (!members) {
-        return participants;
-      }
-      
-      for (const memberId in members) {
-        const member = members[memberId];
-        
-        // Vérifier si le membre a des cours
-        if (member.Cours && member.Cours.cours) {
-          const courses = member.Cours.cours;
-          
-          // Parcourir tous les cours du membre
-          for (const courseId in courses) {
-            const course = courses[courseId];
-            
-            // Vérifier si le titre du cours correspond à la formation
-            if (course.titre === formationTitle) {
-              // Vérifier si le cours est terminé
-              const isFinished = member.Cours.cours_finished && member.Cours.cours_finished[courseId] === true;
-              
-              participants.push({
-                id: memberId,
-                nom: member.nom || 'Nom inconnu',
-                telephone: member.telephone || 'Non renseigné',
-                finished: isFinished
-              });
-              break; // Un membre ne peut être inscrit qu'une fois à une formation
-            }
-          }
+      for (const key in members) {
+        const member = members[key];
+        if (member.cours && member.cours[formationId]) {
+          const isFinished = member.cours_finished && member.cours_finished[formationId];
+          participants.push({
+            id: key,
+            nom: member.nom,
+            telephone: member.telephone || 'Non renseigné',
+            finished: isFinished
+          });
         }
       }
       return participants;
@@ -866,15 +816,14 @@ document.addEventListener('DOMContentLoaded', function() {
       return [];
     }
   }
-  async function loadOnlineParticipants(formationId, formationTitle) {
-    const participants = await getOnlineParticipants(formationTitle);
+  async function loadOnlineParticipants(formationId) {
+    const participants = await getOnlineParticipants(formationId);
     displayOnlineParticipants(participants);
   }
   function displayOnlineParticipants(participants) {
     const presenceList = document.getElementById('presenceList');
     const presenceSummary = document.getElementById('presenceSummary');
     presenceList.innerHTML = '';
-    
     if (participants.length === 0) {
       presenceSummary.classList.remove('hidden');
       presenceSummary.querySelector('h4').innerHTML = `
@@ -884,13 +833,11 @@ document.addEventListener('DOMContentLoaded', function() {
       presenceList.innerHTML = '<div class="text-center text-gray-500 py-4">Aucun participant inscrit à cette formation en ligne</div>';
       return;
     }
-    
     presenceSummary.classList.remove('hidden');
     presenceSummary.querySelector('h4').innerHTML = `
       <i class="ri-user-check-line mr-2 text-green-600"></i>
-      Participants à la formation en ligne (${participants.length})
+      Participants à la formation en ligne
     `;
-    
     participants.forEach(participant => {
       const presenceItem = document.createElement('div');
       presenceItem.className = 'presence-list-item';
@@ -927,7 +874,7 @@ document.addEventListener('DOMContentLoaded', function() {
         presenceData = presenceSnapshot.val() || {};
       } else {
         // Pour les formations en ligne, on récupère les participants automatiquement
-        const participants = await getOnlineParticipants(selectedFormation.titre);
+        const participants = await getOnlineParticipants(selectedFormation.id);
         participants.forEach(participant => {
           presenceData[participant.id] = {
             nom: participant.nom,
