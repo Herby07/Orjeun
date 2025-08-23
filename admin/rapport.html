@@ -149,6 +149,7 @@ body {
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 .filter-btn {
   padding: 8px 16px;
@@ -156,6 +157,7 @@ body {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s;
+  white-space: nowrap;
 }
 .filter-btn.active {
   background-color: #4F46E5;
@@ -349,6 +351,33 @@ body {
 }
 .student-details {
   flex-grow: 1;
+}
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .formation-filter {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filter-btn {
+    width: 100%;
+    text-align: center;
+  }
+  .presence-modal-content {
+    width: 95%;
+    margin: 10px;
+  }
+  .report-editor {
+    padding: 15px;
+  }
+  .grid.grid-cols-1.md\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+  .flex.flex-col.md\:flex-row {
+    flex-direction: column;
+  }
+  .text-center {
+    margin-top: 15px;
+  }
 }
 </style>
 </head>
@@ -770,7 +799,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const presenceSummary = document.getElementById('presenceSummary');
       presenceList.innerHTML = '';
       if (Object.keys(presences).length === 0) {
-        presenceSummary.classList.add('hidden');
+        presenceSummary.classList.remove('hidden');
+        presenceList.innerHTML = '<div class="text-center text-gray-500 py-4">Aucun participant enregistré</div>';
         return;
       }
       presenceSummary.classList.remove('hidden');
@@ -792,42 +822,66 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error("Erreur lors du chargement des présences:", error);
     }
   }
-  async function loadOnlineParticipants(formationId, formationTitle) {
+  async function getOnlineParticipants(formationTitle) {
     try {
       const membersRef = database.ref('membres');
       const membersSnapshot = await membersRef.once('value');
       const members = membersSnapshot.val();
       const participants = [];
+      
+      if (!members) {
+        return participants;
+      }
+      
       for (const key in members) {
         const member = members[key];
-        if (member.cours && member.cours[formationTitle]) {
-          const isFinished = member.cours_finished && member.cours_finished[formationTitle];
-          participants.push({
-            id: key,
-            nom: member.nom,
-            telephone: member.telephone || 'Non renseigné',
-            finished: isFinished
-          });
+        if (member.cours) {
+          // Vérifier si la formation existe dans les cours du membre
+          for (const coursKey in member.cours) {
+            if (coursKey === formationTitle) {
+              const isFinished = member.cours_finished && member.cours_finished[formationTitle];
+              participants.push({
+                id: key,
+                nom: member.nom || 'Nom inconnu',
+                telephone: member.telephone || 'Non renseigné',
+                finished: isFinished
+              });
+              break;
+            }
+          }
         }
       }
-      displayOnlineParticipants(participants);
+      return participants;
     } catch (error) {
       console.error("Erreur lors du chargement des participants en ligne:", error);
+      return [];
     }
+  }
+  async function loadOnlineParticipants(formationId, formationTitle) {
+    const participants = await getOnlineParticipants(formationTitle);
+    displayOnlineParticipants(participants);
   }
   function displayOnlineParticipants(participants) {
     const presenceList = document.getElementById('presenceList');
     const presenceSummary = document.getElementById('presenceSummary');
     presenceList.innerHTML = '';
+    
     if (participants.length === 0) {
-      presenceSummary.classList.add('hidden');
+      presenceSummary.classList.remove('hidden');
+      presenceSummary.querySelector('h4').innerHTML = `
+        <i class="ri-user-check-line mr-2 text-green-600"></i>
+        Participants à la formation en ligne
+      `;
+      presenceList.innerHTML = '<div class="text-center text-gray-500 py-4">Aucun participant inscrit à cette formation en ligne</div>';
       return;
     }
+    
     presenceSummary.classList.remove('hidden');
     presenceSummary.querySelector('h4').innerHTML = `
       <i class="ri-user-check-line mr-2 text-green-600"></i>
-      Participants à la formation en ligne
+      Participants à la formation en ligne (${participants.length})
     `;
+    
     participants.forEach(participant => {
       const presenceItem = document.createElement('div');
       presenceItem.className = 'presence-list-item';
@@ -864,7 +918,7 @@ document.addEventListener('DOMContentLoaded', function() {
         presenceData = presenceSnapshot.val() || {};
       } else {
         // Pour les formations en ligne, on récupère les participants automatiquement
-        const participants = await loadOnlineParticipants(selectedFormation.id, selectedFormation.titre);
+        const participants = await getOnlineParticipants(selectedFormation.titre);
         participants.forEach(participant => {
           presenceData[participant.id] = {
             nom: participant.nom,
