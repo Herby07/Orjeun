@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rapports de Formation - FormaPro</title>
 <script src="https://cdn.tailwindcss.com/3.4.16"></script>
-<script>tailwind.config={theme:{extend:{colors:{primary:'#4F46E5',secondary:'#8B5CF6',tertiary:'#0EA5E9'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+<script>tailwind.config={theme:{extend:{colors:{primary:'#4F46E5',secondary:'#8B5CF6',tertiary:'#0EA5E9'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg:'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
@@ -833,20 +833,29 @@ document.addEventListener('DOMContentLoaded', function() {
         return participants;
       }
       
-      for (const key in members) {
-        const member = members[key];
-        if (member.cours) {
-          // Vérifier si la formation existe dans les cours du membre
-          for (const coursKey in member.cours) {
-            if (coursKey === formationTitle) {
-              const isFinished = member.cours_finished && member.cours_finished[formationTitle];
+      for (const memberId in members) {
+        const member = members[memberId];
+        
+        // Vérifier si le membre a des cours
+        if (member.Cours && member.Cours.cours) {
+          const courses = member.Cours.cours;
+          
+          // Parcourir tous les cours du membre
+          for (const courseId in courses) {
+            const course = courses[courseId];
+            
+            // Vérifier si le titre du cours correspond à la formation
+            if (course.titre === formationTitle) {
+              // Vérifier si le cours est terminé
+              const isFinished = member.Cours.cours_finished && member.Cours.cours_finished[courseId] === true;
+              
               participants.push({
-                id: key,
+                id: memberId,
                 nom: member.nom || 'Nom inconnu',
                 telephone: member.telephone || 'Non renseigné',
                 finished: isFinished
               });
-              break;
+              break; // Un membre ne peut être inscrit qu'une fois à une formation
             }
           }
         }
