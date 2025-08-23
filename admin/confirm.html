@@ -46,9 +46,6 @@
                 <h1 class="text-2xl font-['Pacifico'] text-primary">Orjeun</h1>
             </div>
             <div class="flex items-center space-x-4">
-                <div class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 cursor-pointer">
-                    <i class="ri-notification-3-line text-gray-600"></i>
-                </div>
                 <div class="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 cursor-pointer">
                     <i class="ri-user-line text-primary"></i>
                 </div>
@@ -56,8 +53,8 @@
         </div>
     </nav>
 
-    <header class="pt-20 pb-4 px-4">
-        <div class="max-w-7xl mx-auto">
+    <div class="pt-20 px-4 max-w-7xl mx-auto">
+        <header class="mb-6">
             <div class="flex items-center justify-between mb-2">
                 <h2 class="text-xl font-semibold text-gray-800">Demandes d'inscription</h2>
                 <div class="flex items-center">
@@ -68,11 +65,21 @@
                 </div>
             </div>
             <p class="text-sm text-gray-500">Validez ou supprimez les demandes d'inscription en attente</p>
-        </div>
-    </header>
+        </header>
 
-    <main class="px-4 pb-4">
-        <div class="max-w-7xl mx-auto">
+        <section class="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-2">Inviter un nouveau membre</h2>
+            <p class="text-sm text-gray-500 mb-4">Partagez ce lien pour inviter un nouvel administrateur ou modérateur.</p>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <input type="text" readonly value="orjeun.pro/admin/register" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" id="invite-link">
+                <button class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary cursor-pointer flex items-center justify-center" id="copy-btn">
+                    <i class="ri-file-copy-line mr-1"></i>
+                    Copier
+                </button>
+            </div>
+        </section>
+
+        <main>
             <div id="loading-state" class="py-8 flex flex-col items-center justify-center">
                 <div class="w-12 h-12 mb-4 flex items-center justify-center rounded-full bg-primary/10">
                     <i class="ri-loader-4-line animate-spin text-xl text-primary"></i>
@@ -92,11 +99,11 @@
                 </button>
             </div>
             
-            <div id="requests-container" class="hidden space-y-4"></div>
-        </div>
-    </main>
+            <div id="requests-container" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </main>
+    </div>
 
-    <div id="toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg flex items-center opacity-0 transition-opacity duration-300 z-50 pointer-events-none">
+    <div id="toast" class="fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg flex items-center opacity-0 transition-opacity duration-300 z-50 pointer-events-none">
         <i id="toast-icon" class="mr-2"></i>
         <span id="toast-message">Message de notification</span>
     </div>
@@ -155,8 +162,19 @@
             const modalMessage = document.getElementById('modal-message');
             const modalCancel = document.getElementById('modal-cancel');
             const modalConfirm = document.getElementById('modal-confirm');
+            const copyBtn = document.getElementById('copy-btn');
+            const inviteLinkInput = document.getElementById('invite-link');
             
             let confirmCallback = null;
+
+            // Fonction pour copier le lien d'invitation
+            copyBtn.addEventListener('click', function() {
+                inviteLinkInput.select();
+                document.execCommand('copy');
+                
+                // Afficher un message de confirmation
+                showToast('Lien copié dans le presse-papier', 'success');
+            });
 
             function formatDate(timestamp) {
                 const date = new Date(timestamp);
