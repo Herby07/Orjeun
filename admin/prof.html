@@ -187,6 +187,7 @@ body {
   background-color: #dcfce7;
   border-left: 3px solid #22c55e;
 }
+
 /* Styles pour le menu responsive */
 .mobile-menu-btn {
   display: none;
@@ -200,19 +201,19 @@ body {
 .mobile-menu {
   position: fixed;
   top: 0;
-  right: -300px;
+  left: -300px; /* Changé de right à left */
   width: 280px;
   height: 100vh;
   background-color: white;
-  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1); /* Ombre à droite */
   z-index: 100;
-  transition: right 0.3s ease;
+  transition: left 0.3s ease; /* Transition sur left */
   padding-top: 60px;
   overflow-y: auto;
 }
 
 .mobile-menu.active {
-  right: 0;
+  left: 0; /* Menu visible */
 }
 
 .mobile-menu-overlay {
@@ -297,11 +298,18 @@ body {
   /* Afficher le bouton menu sur mobile */
   .mobile-menu-btn {
     display: block;
+    order: -1; /* Positionne le bouton en premier */
+    margin-right: 10px;
   }
   
   /* Cacher les liens de navigation sur mobile */
   .desktop-nav-links {
     display: none;
+  }
+  
+  /* Ajustement du logo pour mobile */
+  .nav-logo {
+    margin-left: 0;
   }
 }
 
@@ -341,13 +349,13 @@ body {
 <nav class="fixed top-0 left-0 w-full bg-white shadow-sm z-10">
   <div class="px-4 py-3 flex items-center justify-between">
     <div class="flex items-center">
-      <span class="text-xl font-['Pacifico'] text-primary">Orjeun</span>
+      <!-- Bouton menu mobile à gauche -->
+      <button id="mobileMenuBtn" class="mobile-menu-btn">
+        <i class="ri-menu-line"></i>
+      </button>
+      
+      <span class="text-xl font-['Pacifico'] text-primary nav-logo ml-2">Orjeun</span>
     </div>
-    
-    <!-- Bouton menu mobile -->
-    <button id="mobileMenuBtn" class="mobile-menu-btn">
-      <i class="ri-menu-line"></i>
-    </button>
     
     <!-- Liens de navigation desktop -->
     <div class="desktop-nav-links flex items-center space-x-6">
